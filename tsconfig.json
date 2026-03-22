@@ -14,7 +14,7 @@
     "allowImportingTsExtensions": true,
     "target": "esnext",
     "noEmit": true,
-    "types": [],
+    "types": ["vite/client"],
 
     // Other Outputs
     "sourceMap": true,

@@ -1,56 +1,69 @@
+import { supabase } from './supabaseClient'; // Make sure this path is correct
 import { calculateOverallMood } from './moodConfig';
 
 export interface MoodEntry {
-  id: string;
+  id?: string;
+  user_id?: string;
   date: string;
-  mood: string;
+  mood_type: string;
   emotion: string;
-  whatMadeYouFeel: string;
-  whatDidYouDo: string;
-  wasItRight: string;
-  bodyParts: string[];
-  journal: string;
-  suggestion: string;
-  timestamp: number;
+  note: string;
+  created_at?: string;
+  whatMadeYouFeel?: string;
+  bodyParts?: string[];
 }
 
-const STORAGE_KEY = 'moodEntries';
+const TEMP_USER_ID = '1';
 
-export const saveMoodEntry = (entry: MoodEntry) => {
-  const entries = getMoodEntries();
-  entries.push(entry);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+export const saveMoodEntry = async (entry: Omit<MoodEntry, 'user_id'>) => {
+  const { data, error } = await supabase
+    .from('mood_entries')
+    .insert([
+      {
+        ...entry,
+        user_id: TEMP_USER_ID, // Overwrites if user_id was somehow in entry
+      },
+    ])
+    .select(); // Add .select() to actually return the data back to your app
+
+  return { data, error };
 };
 
-export const getMoodEntries = (): MoodEntry[] => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  return stored ? JSON.parse(stored) : [];
+// 2. GET all entries for User 1
+export const getMoodEntries = async (): Promise<MoodEntry[]> => {
+  const { data, error } = await supabase
+    .from('mood_entries')
+    .select('*')
+    .eq('user_id', TEMP_USER_ID)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching:', error.message);
+    return [];
+  }
+  return data || [];
 };
 
-export const getMoodEntriesByDate = (date: string): MoodEntry[] => {
-  const entries = getMoodEntries();
-  return entries.filter((entry) => entry.date === date);
+// 3. GET entries for a specific date
+export const getMoodEntriesByDate = async (
+  date: string,
+): Promise<MoodEntry[]> => {
+  const { data, error } = await supabase
+    .from('mood_entries')
+    .select('*')
+    .eq('user_id', TEMP_USER_ID)
+    .eq('date', date);
+
+  return data || [];
 };
 
-export const getAllMoodsByDate = (): Record<string, MoodEntry[]> => {
-  const entries = getMoodEntries();
-  const grouped: Record<string, MoodEntry[]> = {};
-
-  entries.forEach((entry) => {
-    if (!grouped[entry.date]) {
-      grouped[entry.date] = [];
-    }
-    // grouped[entry.date].push(entry);
-    (grouped[entry.date] ??= []).push(entry);
-  });
-
-  return grouped;
-};
-
-export const getOverallMoodForDate = (date: string): string | null => {
-  const entries = getMoodEntriesByDate(date);
+// 4. OVERALL MOOD (Calculated from DB data)
+export const getOverallMoodForDate = async (
+  date: string,
+): Promise<string | null> => {
+  const entries = await getMoodEntriesByDate(date);
   if (entries.length === 0) return null;
 
-  const moods = entries.map((entry) => entry.mood);
+  const moods = entries.map((entry) => entry.mood_type);
   return calculateOverallMood(moods);
 };

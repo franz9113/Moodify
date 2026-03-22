@@ -15,8 +15,9 @@ export const router = createBrowserRouter([
     path: '/',
     Component: Root,
     children: [
-      { index: true, Component: Landing },
-      { path: 'home', Component: Home },
+      // { index: true, Component: Landing },
+      // { path: 'home', Component: Home },
+      { index: true, Component: Home },
       { path: 'mood-entry', Component: MoodEntry },
       { path: 'mood-selection', Component: MoodSelection },
       { path: 'questions', Component: Questions },
