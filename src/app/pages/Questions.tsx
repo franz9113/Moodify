@@ -65,7 +65,7 @@ export default function Questions() {
   };
 
   const handleCustomSubmit = () => {
-    if (!currentQuestion) return; // added this to avoid returning undefined variable
+    if (!currentQuestion) return;
     if (customAnswer.trim()) {
       const newAnswers = { ...answers, [currentQuestion.id]: customAnswer };
       setAnswers(newAnswers);
@@ -88,15 +88,19 @@ export default function Questions() {
     }
   };
 
+  // CRITICAL UPDATE: Ensures the date variable survives the transition
   const handleContinue = () => {
     const existingData = JSON.parse(
       localStorage.getItem('currentMoodEntry') || '{}',
     );
+
+    // updatedData now contains: mood, emotion, date, answers, and bodyParts
     const updatedData = {
       ...existingData,
       ...answers,
       bodyParts: selectedBodyParts,
     };
+
     localStorage.setItem('currentMoodEntry', JSON.stringify(updatedData));
     navigate('/journal');
   };
