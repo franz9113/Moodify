@@ -1,4 +1,4 @@
-import { calculateOverallMood } from "./moodConfig";
+import { calculateOverallMood } from './moodConfig';
 
 export interface MoodEntry {
   id: string;
@@ -14,7 +14,7 @@ export interface MoodEntry {
   timestamp: number;
 }
 
-const STORAGE_KEY = "moodEntries";
+const STORAGE_KEY = 'moodEntries';
 
 export const saveMoodEntry = (entry: MoodEntry) => {
   const entries = getMoodEntries();
@@ -35,21 +35,22 @@ export const getMoodEntriesByDate = (date: string): MoodEntry[] => {
 export const getAllMoodsByDate = (): Record<string, MoodEntry[]> => {
   const entries = getMoodEntries();
   const grouped: Record<string, MoodEntry[]> = {};
-  
+
   entries.forEach((entry) => {
     if (!grouped[entry.date]) {
       grouped[entry.date] = [];
     }
-    grouped[entry.date].push(entry);
+    // grouped[entry.date].push(entry);
+    (grouped[entry.date] ??= []).push(entry);
   });
-  
+
   return grouped;
 };
 
 export const getOverallMoodForDate = (date: string): string | null => {
   const entries = getMoodEntriesByDate(date);
   if (entries.length === 0) return null;
-  
-  const moods = entries.map(entry => entry.mood);
+
+  const moods = entries.map((entry) => entry.mood);
   return calculateOverallMood(moods);
 };

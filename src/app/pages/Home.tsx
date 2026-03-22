@@ -11,12 +11,12 @@ import {
   getMoodEntriesByDate,
   getAllMoodsByDate,
   getOverallMoodForDate,
-} from '@/app/utils/storage';
+} from '@/app/utils/storage.js';
 import {
   getMoodColor,
   getMoodImage,
   getMoodConfig,
-} from '@/app/utils/moodConfig';
+} from '@/app/utils/moodConfig.js';
 import {
   format,
   startOfMonth,
@@ -256,16 +256,18 @@ export default function Home() {
                     const suggestion = getSuggestionsForMood(overallMood);
                     return (
                       <>
-                        <h5 className='font-medium mb-2'>{suggestion.title}</h5>
+                        <h5 className='font-medium mb-2'>
+                          {suggestion?.title}
+                        </h5>
                         <p className='text-sm text-gray-600 mb-3'>
-                          {suggestion.description}
+                          {suggestion?.description}
                         </p>
                         <div className='bg-cyan-50 rounded-lg p-3'>
                           <p className='text-xs text-gray-600 mb-1'>
                             Recommended tool:
                           </p>
                           <p className='text-sm font-medium text-cyan-700'>
-                            {suggestion.tool}
+                            {suggestion?.tool}
                           </p>
                         </div>
                       </>
