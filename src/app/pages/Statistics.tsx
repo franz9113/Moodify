@@ -346,12 +346,14 @@ export default function Statistics() {
         </div>
 
         {/* Bottom CTA */}
-        <div className='text-center py-4'>
-          <p className='text-gray-500 font-medium'>No mood entries yet</p>
-          <p className='text-gray-400 text-sm'>
-            Start tracking your moods to see statistics
-          </p>
-        </div>
+        {activeEntries.length === 0 && (
+          <div className='text-center py-4'>
+            <p className='text-gray-500 font-medium'>No mood entries yet</p>
+            <p className='text-gray-400 text-sm'>
+              Start tracking your moods to see statistics
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
