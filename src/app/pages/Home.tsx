@@ -56,13 +56,10 @@ export default function Home() {
     };
     fetchData();
   }, [selectedDateStr]);
-
-  // Use your actual logic from moodConfig to get the summary mood name
   const overallMoodName = useMemo(() => {
     return calculateOverallMood(entries.map((e) => e.mood_type));
   }, [entries]);
 
-  // Helper for text colors on the banners to match your design images
   const getBannerTextColor = (mood: string) => {
     const m = mood?.toLowerCase();
     if (m === 'calm') return 'text-emerald-800';
@@ -85,8 +82,6 @@ export default function Home() {
       </div>
 
       <div className='px-6 py-6 w-full'>
-        {/* Weekly Calendar Strip */}
-        {/* Weekly Calendar Strip */}
         <div className='flex items-start gap-3 mb-6'>
           <button
             type='button'
@@ -101,8 +96,6 @@ export default function Home() {
             {weekDays.map((day) => {
               const isSelected = isSameDay(day, selectedDate);
               const dayStr = format(day, 'yyyy-MM-dd');
-
-              // FIX: Get ALL entries for this day to match the banner color logic
               const daysEntries = allEntries.filter((e) => e.date === dayStr);
               const dayOverallMood =
                 daysEntries.length > 0
@@ -115,7 +108,7 @@ export default function Home() {
                   type='button'
                   onClick={() => {
                     setSelectedDate(day);
-                    setIsFullCalendar(false); // Add this line to close the calendar
+                    setIsFullCalendar(false); //close the calendar
                   }}
                   className='flex flex-col items-center group'
                 >
@@ -172,12 +165,11 @@ export default function Home() {
                   {d}
                 </span>
               ))}
-              {/* This generates the current month's dates */}
+              {/* current month's dates */}
               {eachDayOfInterval({
                 start: startOfMonth(selectedDate),
                 end: endOfMonth(selectedDate),
               }).map((day, i) => {
-                // 1. You MUST add these lines here so 'isSel' and 'dMood' exist
                 const isSel = isSameDay(day, selectedDate);
                 const dStr = format(day, 'yyyy-MM-dd');
                 const dEntries = allEntries.filter((e) => e.date === dStr);

@@ -31,7 +31,7 @@ export default function MoodSelection() {
       const moodData = {
         mood: selectedMood,
         emotion: finalEmotion,
-        date: targetDate, // This is the key piece of data
+        date: targetDate,
       };
       localStorage.setItem('currentMoodEntry', JSON.stringify(moodData));
       navigate('/questions');

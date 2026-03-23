@@ -128,7 +128,7 @@ export default function Statistics() {
   }, [activeEntries]);
 
   const trendData = useMemo(() => {
-    // 1. Pre-aggregate data by date string for performance
+    // Pre-aggregate data by date string for performance
     const entryMap: Record<string, { sum: number; count: number }> = {};
     allEntries.forEach((e) => {
       const d = e.date; // Uses the 'date' column string
@@ -137,7 +137,7 @@ export default function Statistics() {
       entryMap[d].count += 1;
     });
 
-    // 2. Yearly View Logic
+    // Yearly View Logic
     if (viewMode === 'year') {
       return eachMonthOfInterval({
         start: startOfYear(referenceDate),
@@ -167,7 +167,7 @@ export default function Statistics() {
       });
     }
 
-    // 3. Weekly/Monthly View Logic
+    // Weekly/Monthly View Logic
     const start =
       viewMode === 'week'
         ? startOfWeek(referenceDate)
@@ -186,7 +186,6 @@ export default function Statistics() {
           viewMode === 'month' ? Number(format(day, 'd')) : format(day, 'EEE'),
         displayLabel:
           viewMode === 'week' ? format(day, 'EEE') : format(day, 'd'),
-        // Change stats.count > 0 ? ... : null to 0
         mood: stats.count > 0 ? stats.sum / stats.count : 0,
         count: stats.count,
       };

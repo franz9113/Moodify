@@ -59,7 +59,6 @@ export default function MoodEntry() {
 
   return (
     <div className='h-screen flex flex-col bg-white font-sans'>
-      {/* Header - Matching Figma Title */}
       <div className='px-8 py-6 flex items-center justify-between sticky top-0 bg-white z-10'>
         <h1 className='text-2xl font-black text-gray-800'>Mood Entry</h1>
         <button
@@ -99,9 +98,8 @@ export default function MoodEntry() {
             </p>
           </div>
 
-          {/* Details Section - Using the Bold Gray Labels */}
+          {/* Details Section */}
           <div className='space-y-8'>
-            {/* Trigger Block */}
             <div className='space-y-2'>
               <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>
                 What made you feel this way
@@ -140,7 +138,7 @@ export default function MoodEntry() {
               </div>
             </div>
 
-            {/* Body Sensations - Using Chips like the 2nd Image */}
+            {/* Body Sensations */}
             <div className='space-y-3'>
               <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>
                 Where you felt it
@@ -149,7 +147,6 @@ export default function MoodEntry() {
                 {(() => {
                   const rawData =
                     entry.bodyParts || entry.physical_sensations || [];
-                  // Force it into an array if it's currently a string
                   const sensationsArray =
                     typeof rawData === 'string'
                       ? rawData.split(',').map((s) => s.trim())

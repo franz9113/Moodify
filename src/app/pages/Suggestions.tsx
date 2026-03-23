@@ -41,7 +41,7 @@ export default function Suggestions() {
     },
   };
 
-  // FIX 1: Access the mood property from finalData
+  // Access the mood property from finalData
   const moodKey = finalData?.mood?.toLowerCase() || 'calm';
   const content = MOOD_SUGGESTIONS[moodKey] || MOOD_SUGGESTIONS['calm'];
 
