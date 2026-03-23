@@ -11,10 +11,10 @@ import {
   startOfYear,
   endOfYear,
   eachMonthOfInterval,
-  isSameDay,
   addWeeks,
   addMonths,
   addYears,
+  parseISO,
 } from 'date-fns';
 import {
   XAxis,
@@ -34,6 +34,15 @@ interface MoodData {
   count: number;
 }
 
+const getMoodLabel = (value: number) => {
+  if (value === 0) return 'No Entry';
+  if (value >= 4.5) return 'Great';
+  if (value >= 3.5) return 'Positive';
+  if (value >= 2.5) return 'Calm';
+  if (value >= 1.5) return 'Low';
+  return 'Exhausted';
+};
+
 export default function Statistics() {
   const [allEntries, setAllEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,10 +52,11 @@ export default function Statistics() {
   useEffect(() => {
     async function fetchEntries() {
       setLoading(true);
+      // Fetching using the 'date' column for consistency
       const { data, error } = await supabase
         .from('mood_entries')
         .select('*')
-        .order('created_at', { ascending: true });
+        .order('date', { ascending: true });
 
       if (!error) setAllEntries(data || []);
       setLoading(false);
@@ -81,22 +91,27 @@ export default function Statistics() {
     [referenceDate],
   );
 
+  // Filter entries based on the 'date' string column
   const activeEntries = useMemo(() => {
-    const start =
+    const startStr = format(
       viewMode === 'week'
         ? startOfWeek(referenceDate)
         : viewMode === 'year'
           ? startOfYear(referenceDate)
-          : startOfMonth(referenceDate);
-    const end =
+          : startOfMonth(referenceDate),
+      'yyyy-MM-dd',
+    );
+    const endStr = format(
       viewMode === 'week'
         ? endOfWeek(referenceDate)
         : viewMode === 'year'
           ? endOfYear(referenceDate)
-          : endOfMonth(referenceDate);
+          : endOfMonth(referenceDate),
+      'yyyy-MM-dd',
+    );
+
     return allEntries.filter((entry) => {
-      const date = new Date(entry.created_at);
-      return date >= start && date <= end;
+      return entry.date >= startStr && entry.date <= endStr;
     });
   }, [allEntries, viewMode, referenceDate]);
 
@@ -113,6 +128,46 @@ export default function Statistics() {
   }, [activeEntries]);
 
   const trendData = useMemo(() => {
+    // 1. Pre-aggregate data by date string for performance
+    const entryMap: Record<string, { sum: number; count: number }> = {};
+    allEntries.forEach((e) => {
+      const d = e.date; // Uses the 'date' column string
+      if (!entryMap[d]) entryMap[d] = { sum: 0, count: 0 };
+      entryMap[d].sum += getMoodValue(e.mood_type);
+      entryMap[d].count += 1;
+    });
+
+    // 2. Yearly View Logic
+    if (viewMode === 'year') {
+      return eachMonthOfInterval({
+        start: startOfYear(referenceDate),
+        end: endOfYear(referenceDate),
+      }).map((month) => {
+        const monthLabel = format(month, 'MMM');
+        const monthPrefix = format(month, 'yyyy-MM');
+
+        const monthEntries = Object.entries(entryMap).filter(([date]) =>
+          date.startsWith(monthPrefix),
+        );
+        const totalSum = monthEntries.reduce(
+          (acc, [_, val]) => acc + val.sum,
+          0,
+        );
+        const totalCount = monthEntries.reduce(
+          (acc, [_, val]) => acc + val.count,
+          0,
+        );
+
+        return {
+          label: monthLabel,
+          displayLabel: monthLabel,
+          mood: totalCount > 0 ? totalSum / totalCount : 0,
+          count: totalCount,
+        };
+      });
+    }
+
+    // 3. Weekly/Monthly View Logic
     const start =
       viewMode === 'week'
         ? startOfWeek(referenceDate)
@@ -122,38 +177,18 @@ export default function Statistics() {
         ? endOfWeek(referenceDate)
         : endOfMonth(referenceDate);
 
-    if (viewMode === 'year') {
-      return eachMonthOfInterval({
-        start: startOfYear(referenceDate),
-        end: endOfYear(referenceDate),
-      }).map((month) => {
-        const label = format(month, 'MMM');
-        const entries = allEntries.filter(
-          (e) => format(new Date(e.created_at), 'MMM') === label,
-        );
-        const avg = entries.length
-          ? entries.reduce((s, e) => s + getMoodValue(e.mood_type), 0) /
-            entries.length
-          : 0;
-        return { label, displayLabel: label, mood: avg, count: entries.length };
-      });
-    }
-
     return eachDayOfInterval({ start, end }).map((day) => {
-      const entries = allEntries.filter((e) =>
-        isSameDay(new Date(e.created_at), day),
-      );
-      const avg = entries.length
-        ? entries.reduce((s, e) => s + getMoodValue(e.mood_type), 0) /
-          entries.length
-        : 0;
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const stats = entryMap[dateKey] || { sum: 0, count: 0 };
+
       return {
         label:
           viewMode === 'month' ? Number(format(day, 'd')) : format(day, 'EEE'),
         displayLabel:
           viewMode === 'week' ? format(day, 'EEE') : format(day, 'd'),
-        mood: avg,
-        count: entries.length,
+        // Change stats.count > 0 ? ... : null to 0
+        mood: stats.count > 0 ? stats.sum / stats.count : 0,
+        count: stats.count,
       };
     });
   }, [allEntries, viewMode, referenceDate]);
@@ -236,70 +271,102 @@ export default function Statistics() {
             </div>
           </div>
 
-          <div className='bg-white border border-gray-100 rounded-3xl p-4 shadow-sm h-[220px]'>
+          <div className='bg-white border border-gray-100 rounded-3xl p-4 shadow-sm h-[250px]'>
             <ResponsiveContainer width='100%' height='100%'>
-              <LineChart data={trendData}>
+              <LineChart
+                data={trendData}
+                margin={{ top: 20, right: 20, left: -20, bottom: 0 }}
+              >
                 <CartesianGrid
                   strokeDasharray='3 3'
-                  vertical={false}
-                  stroke='#f1f5f9'
+                  vertical={true}
+                  stroke='#e2e8f0'
                 />
                 {viewMode === 'month' ? (
                   <XAxis
                     dataKey='label'
                     type='number'
                     domain={[1, lastDayOfMonth]}
-                    ticks={[
-                      1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31,
-                    ].filter((t) => t <= lastDayOfMonth)}
-                    axisLine={false}
+                    ticks={[2, 4, 6, 8, 10, 13, 16, 19, 22, 25, 28, 31].filter(
+                      (t) => t <= lastDayOfMonth,
+                    )}
+                    axisLine={{ stroke: '#94a3b8' }}
                     tickLine={false}
-                    tick={{ fill: '#94a3b8', fontSize: 11 }}
+                    tick={{ fill: '#64748b', fontSize: 12 }}
                   />
                 ) : (
                   <XAxis
                     dataKey='label'
-                    axisLine={false}
+                    axisLine={{ stroke: '#94a3b8' }}
                     tickLine={false}
-                    tick={{ fill: '#94a3b8', fontSize: 11 }}
+                    tick={{ fill: '#64748b', fontSize: 12 }}
                   />
                 )}
                 <YAxis
                   domain={[0, 5]}
-                  ticks={[0, 1, 2, 3, 4, 5]}
-                  axisLine={false}
+                  ticks={[0, 1, 2, 3, 5]}
+                  axisLine={{ stroke: '#94a3b8' }}
                   tickLine={false}
-                  tick={{ fill: '#94a3b8', fontSize: 11 }}
+                  tick={{ fill: '#64748b', fontSize: 12 }}
                 />
+
                 <Tooltip
+                  cursor={{ stroke: '#e2e8f0', strokeWidth: 1 }}
                   content={({ active, payload }) => {
-                    const data = (payload as any)?.[0]?.payload;
-                    if (active && data && data.count > 0)
+                    if (active && payload && payload.length) {
+                      const data = payload?.[0]?.payload;
+                      if (!data) return null;
+
+                      // Use the helper function here!
+                      const moodLabel = getMoodLabel(data.mood);
+
+                      // Optional: Dynamic colors for the text
+                      const textColor =
+                        data.mood >= 3.5
+                          ? 'text-emerald-500'
+                          : data.mood >= 2.5
+                            ? 'text-cyan-500'
+                            : 'text-purple-500';
+
                       return (
-                        <div className='bg-white p-3 rounded-xl shadow-xl border border-gray-100 text-xs'>
-                          <p className='font-bold text-gray-800'>
-                            {data.displayLabel || data.label}
+                        <div className='bg-white p-4 rounded-2xl shadow-2xl border border-gray-50 flex flex-col items-center min-w-[100px]'>
+                          <p className='font-bold text-gray-800 text-sm mb-1'>
+                            Day {data.displayLabel || data.label}
                           </p>
-                          <p className='text-gray-500'>{data.count} entries</p>
+                          <p className={`${textColor} font-semibold text-xs`}>
+                            {moodLabel}
+                          </p>
+                          <p className='text-gray-400 text-[10px]'>
+                            {data.count}{' '}
+                            {data.count === 1 ? 'entry' : 'entries'}
+                          </p>
                         </div>
                       );
+                    }
                     return null;
                   }}
                 />
+
                 <Line
                   type='monotone'
                   dataKey='mood'
-                  stroke='#8b5cf6'
-                  strokeWidth={3}
+                  stroke='#06b6d4'
+                  strokeWidth={2}
                   dot={false}
-                  connectNulls
+                  connectNulls={true}
+                  activeDot={{
+                    r: 4,
+                    fill: '#06b6d4',
+                    stroke: '#fff',
+                    strokeWidth: 2,
+                  }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Top 5 Moods Section - X-Axis Visible */}
+        {/* Top 5 Moods Section */}
         <div className='space-y-4'>
           <h3 className='text-lg font-bold'>Top 5 Moods</h3>
           <div className='bg-white border border-gray-100 rounded-3xl p-6 shadow-sm min-h-[180px] flex items-center justify-center'>
@@ -344,16 +411,6 @@ export default function Statistics() {
             )}
           </div>
         </div>
-
-        {/* Bottom CTA */}
-        {activeEntries.length === 0 && (
-          <div className='text-center py-4'>
-            <p className='text-gray-500 font-medium'>No mood entries yet</p>
-            <p className='text-gray-400 text-sm'>
-              Start tracking your moods to see statistics
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
