@@ -18,18 +18,18 @@ const getRecommendation = (mood: string) => {
     };
   if (m === 'mad')
     return {
-      title: 'Physical Release',
+      title: 'Progressive Muscle Relaxation',
       description: 'Try a quick walk or intense stretching to release energy.',
     };
   if (m === 'sad')
     return {
-      title: 'Self-Compassion',
+      title: 'Deep Breathing Exercise',
       description:
         'Take a moment to acknowledge your feelings without judgment.',
     };
   if (m === 'exhausted')
     return {
-      title: 'Deep Relaxation',
+      title: 'Relaxation Techniques',
       description: 'Try a body scan or a short power nap.',
     };
   return {
@@ -177,7 +177,7 @@ export default function MoodEntry() {
             </div>
 
             {/* Journal Block */}
-            {/* {(entry.journal || entry.note) && (
+            {(entry.journal || entry.note) && (
               <div className='space-y-2'>
                 <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>
                   Journal
@@ -188,7 +188,7 @@ export default function MoodEntry() {
                   </p>
                 </div>
               </div>
-            )} */}
+            )}
 
             {/* Recommendation Tool Block - Matching the Cyan Box */}
             <div className='bg-cyan-50/50 rounded-[32px] p-6 border border-cyan-100 mt-10'>
@@ -198,9 +198,9 @@ export default function MoodEntry() {
               <h4 className='text-xl font-black text-cyan-600 mb-1'>
                 {getRecommendation(entry.mood || entry.mood_type).title}
               </h4>
-              <p className='text-sm font-medium text-cyan-700/70'>
+              {/* <p className='text-sm font-medium text-cyan-700/70'>
                 {getRecommendation(entry.mood || entry.mood_type).description}
-              </p>
+              </p> */}
             </div>
           </div>
         </div>
