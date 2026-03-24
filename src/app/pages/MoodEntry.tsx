@@ -1,41 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { X } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { getMoodImage } from '@/app/utils/moodConfig';
+import { THEME } from '@/app/utils/theme';
+import { CustomButton } from '@/app/components/custom/CustomComponents';
 
 const getRecommendation = (mood: string) => {
-  const m = mood?.toLowerCase();
-  if (m === 'calm')
-    return {
-      title: 'Mindfulness Meditation',
-      description: 'Maintain this balance with a brief breathing exercise.',
-    };
-  if (m === 'happy')
-    return {
-      title: 'Gratitude Journaling',
-      description: 'Write down what made this moment special.',
-    };
-  if (m === 'mad')
-    return {
-      title: 'Progressive Muscle Relaxation',
-      description: 'Try a quick walk or intense stretching to release energy.',
-    };
-  if (m === 'sad')
-    return {
-      title: 'Deep Breathing Exercise',
-      description:
-        'Take a moment to acknowledge your feelings without judgment.',
-    };
-  if (m === 'exhausted')
-    return {
-      title: 'Relaxation Techniques',
-      description: 'Try a body scan or a short power nap.',
-    };
-  return {
-    title: 'Reflection',
-    description: 'Check in with yourself again in an hour.',
+  const recommendations: Record<string, string> = {
+    Calm: 'Mindfulness Meditation',
+    Happy: 'Gratitude Journal',
+    Mad: 'Progressive Muscle Relaxation',
+    Exhausted: 'Relaxation Techniques',
+    Sad: 'Deep Breathing Exercise',
   };
+  return recommendations[mood] || 'Mindfulness Meditation';
 };
 
 export default function MoodEntry() {
@@ -51,155 +30,182 @@ export default function MoodEntry() {
 
   if (!entry) {
     return (
-      <div className='h-screen flex items-center justify-center font-bold text-gray-400'>
+      <div
+        className='h-full flex items-center justify-center font-bold'
+        style={{
+          backgroundColor: THEME.colors.background,
+          color: THEME.colors.text,
+        }}
+      >
         Loading...
       </div>
     );
   }
 
+  // Calculate these ONLY after we know 'entry' exists
+  const moodName = entry.mood || entry.mood_type;
+  const recommendedTool = getRecommendation(moodName);
+
   return (
-    <div className='h-screen flex flex-col bg-white font-sans'>
-      <div className='px-8 py-6 flex items-center justify-between sticky top-0 bg-white z-10'>
-        <h1 className='text-2xl font-black text-gray-800'>Mood Entry</h1>
-        <button
+    <div
+      className='h-full flex flex-col'
+      style={{ backgroundColor: THEME.colors.background }}
+    >
+      {/* Header */}
+      <div className='px-6 py-4 flex items-center justify-between bg-white shadow-sm'>
+        <h1 className='text-xl font-bold' style={{ color: THEME.colors.text }}>
+          Mood Entry
+        </h1>
+        <CustomButton
+          variant='ghost'
+          fullWidth={false}
           onClick={() => {
             localStorage.removeItem('viewMoodEntry');
             navigate('/');
           }}
-          className='p-2 bg-gray-50 rounded-full text-gray-400 hover:bg-gray-100 transition-colors'
+          className='p-2'
         >
-          <X size={24} strokeWidth={3} />
-        </button>
+          <X size={24} />
+        </CustomButton>
       </div>
 
-      <div className='flex-1 overflow-y-auto px-8 pb-12'>
-        <div className='max-w-md mx-auto space-y-10'>
-          {/* Mood Emoji & Title Section */}
-          <div className='text-center mt-4 mb-2'>
-            <p className='text-sm font-bold text-gray-400'>
-              {entry.created_at
-                ? format(new Date(entry.created_at), "MMMM d, yyyy 'at' h:mm a")
-                : 'March 23, 2026 at 6:09 PM'}
+      <div className='flex-1 overflow-y-auto px-6 py-8'>
+        <div className='max-w-md mx-auto space-y-8'>
+          {/* Main Mood Header Section */}
+          <div className='text-center space-y-3'>
+            <p
+              className='text-xs font-bold uppercase tracking-widest opacity-50'
+              style={{ color: THEME.colors.text }}
+            >
+              {format(
+                new Date(entry.timestamp || entry.created_at),
+                "MMMM d, yyyy 'at' h:mm a",
+              )}
             </p>
-          </div>
-          <div className='text-center pt-4'>
-            <div className='flex flex-col items-center mb-10'>
-              <img
-                src={getMoodImage(entry.mood || entry.mood_type)}
-                alt={entry.mood}
-                className='w-24 h-24 drop-shadow-sm'
-              />
+            <div className='flex items-center justify-center'>
+              <div className='p-4'>
+                <img
+                  src={getMoodImage(moodName)}
+                  alt={moodName}
+                  className='w-24 h-24 object-contain'
+                />
+              </div>
             </div>
-            <h2 className='text-4xl font-black text-gray-800 tracking-tight'>
-              {entry.mood || entry.mood_type}
+            <h2
+              className='text-3xl font-black'
+              style={{ color: THEME.colors.text }}
+            >
+              {moodName}
             </h2>
-            <p className='text-xl font-bold text-gray-400 mt-1'>
+            <p
+              className='text-lg font-medium opacity-70'
+              style={{ color: THEME.colors.text }}
+            >
               {entry.emotion}
             </p>
           </div>
 
           {/* Details Section */}
-          <div className='space-y-8'>
-            <div className='space-y-2'>
-              <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>
-                What made you feel this way
-              </p>
-              <div className='bg-gray-50/80 p-5 rounded-[24px] border border-gray-100/50'>
-                <p className='font-bold text-gray-800 leading-relaxed'>
-                  {entry.whatMadeYouFeel ||
-                    entry.trigger ||
-                    'No trigger specified'}
-                </p>
-              </div>
-            </div>
+          <div className='space-y-4'>
+            {[
+              {
+                label: 'The Trigger',
+                value: entry.whatMadeYouFeel || entry.trigger,
+              },
+              {
+                label: 'Your Response',
+                value: entry.whatDidYouDo || entry.action,
+              },
+              {
+                label: 'Reflection',
+                value: entry.wasItRight || entry.reflection,
+              },
+            ].map(
+              (item, index) =>
+                item.value && (
+                  <div
+                    key={index}
+                    className='bg-white rounded-2xl p-5 border-2 shadow-sm'
+                    style={{ borderColor: THEME.colors.neutral }}
+                  >
+                    <p
+                      className='text-[10px] font-black uppercase tracking-widest mb-1 opacity-40'
+                      style={{ color: THEME.colors.text }}
+                    >
+                      {item.label}
+                    </p>
+                    <p
+                      className='font-bold text-base leading-tight'
+                      style={{ color: THEME.colors.text }}
+                    >
+                      {item.value}
+                    </p>
+                  </div>
+                ),
+            )}
 
-            {/* Response Block */}
-            <div className='space-y-2'>
-              <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>
-                What you did in response
-              </p>
-              <div className='bg-gray-50/80 p-5 rounded-[24px] border border-gray-100/50'>
-                <p className='font-bold text-gray-800 leading-relaxed'>
-                  {entry.whatDidYouDo ||
-                    entry.response ||
-                    'No response recorded'}
+            {/* Body Mapping Section */}
+            {Array.isArray(entry.bodyParts) && entry.bodyParts.length > 0 && (
+              <div
+                className='bg-white rounded-2xl p-5 border-2 shadow-sm'
+                style={{ borderColor: THEME.colors.neutral }}
+              >
+                <p
+                  className='text-[10px] font-black uppercase tracking-widest mb-3 opacity-40'
+                  style={{ color: THEME.colors.text }}
+                >
+                  Physical Sensations
                 </p>
-              </div>
-            </div>
-            {/* New Reflection Block - "Did you think it was right?" */}
-            <div className='space-y-2'>
-              <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>
-                Did you think it was right?
-              </p>
-              <div className='bg-gray-50/80 p-5 rounded-[24px] border border-gray-100/50'>
-                <p className='font-bold text-gray-800 leading-relaxed'>
-                  {entry.was_right || entry.reflection || 'Not sure'}
-                </p>
-              </div>
-            </div>
-
-            {/* Body Sensations */}
-            <div className='space-y-3'>
-              <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>
-                Where you felt it
-              </p>
-              <div className='flex flex-wrap gap-2'>
-                {(() => {
-                  const rawData =
-                    entry.bodyParts || entry.physical_sensations || [];
-                  const sensationsArray =
-                    typeof rawData === 'string'
-                      ? rawData.split(',').map((s) => s.trim())
-                      : Array.isArray(rawData)
-                        ? rawData
-                        : [];
-
-                  return sensationsArray.length > 0 ? (
-                    sensationsArray.map((part: string) => (
-                      <span
-                        key={part}
-                        className='px-5 py-2.5 bg-white rounded-full text-sm font-bold text-gray-700 border border-gray-100 shadow-sm'
-                      >
-                        {part.charAt(0).toUpperCase() +
-                          part.slice(1).replace('-', ' ')}
-                      </span>
-                    ))
-                  ) : (
-                    <span className='text-gray-400 font-bold text-sm italic'>
-                      No sensations recorded
+                <div className='flex flex-wrap gap-2'>
+                  {entry.bodyParts.map((part: string) => (
+                    <span
+                      key={part}
+                      className='px-3 py-1.5 font-bold rounded-lg text-xs'
+                      style={{
+                        backgroundColor: THEME.colors.primary,
+                        color: THEME.colors.text,
+                      }}
+                    >
+                      {part.replace('-', ' ')}
                     </span>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Journal Block */}
-            {(entry.journal || entry.note) && (
-              <div className='space-y-2'>
-                <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>
-                  Journal
-                </p>
-                <div className='bg-gray-50/80 p-5 rounded-[24px] border border-gray-100/50'>
-                  <p className='font-medium text-gray-700 whitespace-pre-wrap leading-relaxed'>
-                    {entry.journal || entry.note}
-                  </p>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* Recommendation Tool Block - Matching the Cyan Box */}
-            <div className='bg-cyan-50/50 rounded-[32px] p-6 border border-cyan-100 mt-10'>
-              <p className='text-[10px] font-black text-cyan-800 uppercase tracking-widest mb-2'>
-                Recommended tool
-              </p>
-              <h4 className='text-xl font-black text-cyan-600 mb-1'>
-                {getRecommendation(entry.mood || entry.mood_type).title}
-              </h4>
-              {/* <p className='text-sm font-medium text-cyan-700/70'>
-                {getRecommendation(entry.mood || entry.mood_type).description}
-              </p> */}
+            {/* Recommendation Box - Specifically styled for the Cyan Highlight */}
+            <div
+              className='rounded-2xl p-6 border-2 shadow-md flex items-start gap-4 animate-in zoom-in duration-500 delay-500'
+              style={{
+                backgroundColor: `${THEME.colors.primary}20`,
+                borderColor: THEME.colors.primary,
+              }}
+            >
+              <Sparkles className='mt-1' style={{ color: THEME.colors.text }} />
+              <div>
+                <p
+                  className='text-[10px] font-black uppercase opacity-60 tracking-wider mb-1'
+                  style={{ color: THEME.colors.text }}
+                >
+                  Recommended tool
+                </p>
+                <p
+                  className='text-lg font-black'
+                  leading-tight
+                  style={{ color: THEME.colors.text }}
+                >
+                  {recommendedTool}
+                </p>
+              </div>
             </div>
           </div>
+
+          {/* Action Footer */}
+          {/* <div className='pt-4 pb-10'>
+            <CustomButton variant='outline' onClick={() => navigate('/')}>
+              Back to Dashboard
+            </CustomButton>
+          </div> */}
         </div>
       </div>
     </div>

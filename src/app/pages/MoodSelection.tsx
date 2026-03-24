@@ -90,7 +90,6 @@ export default function MoodSelection() {
             {emotions[selectedMood as keyof typeof emotions].map((emotion) => (
               <CustomButton
                 key={emotion}
-                // SWITCH: 'selected' for light fill, 'outline' for unselected
                 variant={selectedEmotion === emotion ? 'selected' : 'outline'}
                 onClick={() => setSelectedEmotion(emotion)}
               >

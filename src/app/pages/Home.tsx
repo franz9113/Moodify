@@ -15,6 +15,8 @@ import {
   type MoodEntry,
 } from '@/app/utils/storage';
 import { getMoodColor, getMoodImage } from '@/app/utils/moodConfig';
+import { THEME } from '@/app/utils/theme';
+import { CustomButton } from '@/app/components/custom/CustomComponents';
 import {
   format,
   startOfMonth,
@@ -36,7 +38,6 @@ export default function Home() {
   const [showFullCalendar, setShowFullCalendar] = useState(false);
   const [showOverallSuggestions, setShowOverallSuggestions] = useState(false);
 
-  // Data State
   const [entriesForSelectedDate, setEntriesForSelectedDate] = useState<
     MoodEntry[]
   >([]);
@@ -46,7 +47,6 @@ export default function Home() {
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
   const overallMood = getOverallMoodForDate(entriesForSelectedDate);
 
-  // Fetch Data from Supabase
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -54,7 +54,6 @@ export default function Home() {
         getMoodEntriesByDate(selectedDateStr),
         getAllMoodEntries(),
       ]);
-
       setEntriesForSelectedDate(dayEntries);
       setAllMoodsMap(formatMoodsByDate(allEntries));
       setLoading(false);
@@ -77,64 +76,64 @@ export default function Home() {
   };
 
   const getSuggestionsForMood = (mood: string | null) => {
-    // 1. If mood is null, return the Calm suggestion immediately
     if (!mood)
-      return {
-        title: 'Embrace this peace',
-        description: 'You found balance.',
-        tool: 'Meditation',
+      return { title: 'Embrace this peace', description: 'You found balance.' };
+    const suggestions: Record<string, { title: string; description: string }> =
+      {
+        Happy: {
+          title: 'Keep the momentum going!',
+          description: 'Your positive energy is wonderful.',
+        },
+        Sad: {
+          title: "It's okay to feel sad",
+          description: 'Allow yourself to feel these emotions.',
+        },
+        Mad: {
+          title: 'Channel your energy',
+          description: 'Anger is a valid emotion.',
+        },
+        Exhausted: {
+          title: 'Rest and recharge',
+          description: 'Your body needs rest.',
+        },
+        Calm: {
+          title: 'Embrace this peace',
+          description: 'You found balance.',
+        },
       };
-
-    const suggestions: Record<
-      string,
-      { title: string; description: string; tool: string }
-    > = {
-      Happy: {
-        title: 'Keep the momentum going!',
-        description: 'Your positive energy is wonderful.',
-        tool: 'Gratitude Journal',
-      },
-      Sad: {
-        title: "It's okay to feel sad",
-        description: 'Allow yourself to feel these emotions.',
-        tool: 'Deep Breathing',
-      },
-      Mad: {
-        title: 'Channel your energy',
-        description: 'Anger is a valid emotion.',
-        tool: 'Muscle Relaxation',
-      },
-      Exhausted: {
-        title: 'Rest and recharge',
-        description: 'Your body needs rest.',
-        tool: 'Relaxation',
-      },
-      Calm: {
-        title: 'Embrace this peace',
-        description: 'You found balance.',
-        tool: 'Meditation',
-      },
-    };
-
-    // 2. Use a fallback here just in case the mood string doesn't match a key
     return suggestions[mood] || suggestions.Calm;
   };
 
   return (
-    <div className='flex flex-col h-full pb-20'>
-      <div className='px-6 py-4 border-b border-gray-200 flex justify-center'>
+    <div
+      className='flex flex-col h-full pb-20'
+      style={{ backgroundColor: THEME.colors.background }}
+    >
+      {/* Header */}
+      <div className='px-6 py-4 flex justify-center bg-white shadow-sm'>
         <img src={logoImage} alt='Moodify' className='h-12' />
       </div>
 
       <div className='flex-1 overflow-y-auto'>
+        {/* Requirement (d): Daily Positive Comment */}
+        <div
+          className='px-6 pt-6 text-center italic opacity-80'
+          style={{ color: THEME.colors.text }}
+        >
+          "You're doing great today!"
+        </div>
+
+        {/* Date Selector Section */}
         <div className='px-6 py-4'>
           <div className='flex items-center gap-2'>
-            <button
+            <CustomButton
+              variant={showFullCalendar ? 'primary' : 'outline'}
+              fullWidth={false}
               onClick={() => setShowFullCalendar(!showFullCalendar)}
-              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${showFullCalendar ? 'bg-cyan-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+              className='w-12 h-12 p-0'
             >
               <Calendar size={20} />
-            </button>
+            </CustomButton>
 
             <div className='flex-1 grid grid-cols-7 gap-1'>
               {weekDays.map((day) => (
@@ -143,11 +142,14 @@ export default function Home() {
                   onClick={() => setSelectedDate(day)}
                   className='relative flex flex-col items-center'
                 >
-                  <span className='text-xs text-gray-500 mb-1'>
+                  <span
+                    className='text-xs mb-1'
+                    style={{ color: THEME.colors.text }}
+                  >
                     {format(day, 'EEE').charAt(0)}
                   </span>
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm transition-all ${getDayMoodColor(day)} ${isSameDay(day, selectedDate) ? 'ring-2 ring-cyan-500 scale-110' : ''}`}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm transition-all ${getDayMoodColor(day)} ${isSameDay(day, selectedDate) ? 'ring-2 ring-[#F5CB5C] scale-110' : ''}`}
                   >
                     {format(day, 'd')}
                   </div>
@@ -158,14 +160,17 @@ export default function Home() {
         </div>
 
         {showFullCalendar && (
-          <div className='px-6 py-4 border-t border-gray-200 bg-gray-50'>
+          <div className='px-6 py-4 border-t border-gray-200 bg-white shadow-inner'>
             <div className='flex items-center justify-between mb-4'>
               <button
                 onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
               >
                 <ChevronLeft />
               </button>
-              <h2 className='text-lg font-medium'>
+              <h2
+                className='text-lg font-bold'
+                style={{ color: THEME.colors.text }}
+              >
                 {format(currentMonth, 'MMMM yyyy')}
               </h2>
               <button
@@ -185,7 +190,7 @@ export default function Home() {
                     setSelectedDate(day);
                     setShowFullCalendar(false);
                   }}
-                  className={`aspect-square rounded-lg flex items-center justify-center text-sm ${getDayMoodColor(day)} ${isSameDay(day, selectedDate) ? 'ring-2 ring-cyan-500' : ''} ${!isSameMonth(day, currentMonth) ? 'opacity-30' : ''}`}
+                  className={`aspect-square rounded-lg flex items-center justify-center text-sm ${getDayMoodColor(day)} ${isSameDay(day, selectedDate) ? 'ring-2 ring-[#F5CB5C]' : ''} ${!isSameMonth(day, currentMonth) ? 'opacity-30' : ''}`}
                 >
                   {format(day, 'd')}
                 </button>
@@ -195,25 +200,34 @@ export default function Home() {
         )}
 
         <div className='px-6 py-4'>
-          <h3 className='text-lg mb-3'>
+          <h3
+            className='text-xl font-bold mb-4'
+            style={{ color: THEME.colors.text }}
+          >
             {format(selectedDate, 'MMMM d, yyyy')}
           </h3>
 
           {loading ? (
-            <p className='text-center text-gray-400 py-10'>Loading...</p>
+            <p
+              className='text-center py-10'
+              style={{ color: THEME.colors.text }}
+            >
+              Loading...
+            </p>
           ) : (
             <>
               {overallMood && (
-                <div className='mb-4'>
+                <div className='mb-6'>
                   <button
                     onClick={() =>
                       setShowOverallSuggestions(!showOverallSuggestions)
                     }
-                    className={`w-full ${getMoodColor(overallMood)} rounded-2xl p-6 flex flex-col items-center gap-3 transition-all`}
+                    className={`w-full rounded-3xl p-6 flex flex-col items-center gap-3 transition-all shadow-sm border-2 ${getMoodColor(overallMood)}`}
+                    style={{ borderColor: THEME.colors.primary }}
                   >
-                    <p className='text-sm'>
+                    <p className='text-sm' style={{ color: THEME.colors.text }}>
                       Your overall mood is{' '}
-                      <span className='font-semibold'>{overallMood}</span>
+                      <span className='font-bold'>{overallMood}</span>
                     </p>
                     <img
                       src={getMoodImage(overallMood)}
@@ -221,16 +235,34 @@ export default function Home() {
                       className='w-24 h-24'
                     />
                   </button>
+
                   {showOverallSuggestions && (
-                    <div className='mt-3 bg-white border-2 border-cyan-500 rounded-xl p-4 shadow-lg'>
-                      <div className='flex items-center gap-2 mb-3'>
-                        <Sparkles size={20} className='text-cyan-500' />
-                        <h4 className='font-medium'>Mood Regulation</h4>
+                    <div
+                      className='mt-3 bg-white border-2 rounded-2xl p-4 shadow-lg animate-in zoom-in-95 duration-200'
+                      style={{ borderColor: THEME.colors.primary }}
+                    >
+                      <div className='flex items-center gap-2 mb-2'>
+                        <Sparkles
+                          size={20}
+                          style={{ color: THEME.colors.primary }}
+                        />
+                        <h4
+                          className='font-bold'
+                          style={{ color: THEME.colors.text }}
+                        >
+                          Mood Regulation
+                        </h4>
                       </div>
-                      <h5 className='font-medium'>
+                      <h5
+                        className='font-bold'
+                        style={{ color: THEME.colors.text }}
+                      >
                         {getSuggestionsForMood(overallMood)?.title}
                       </h5>
-                      <p className='text-sm text-gray-600'>
+                      <p
+                        className='text-sm'
+                        style={{ color: THEME.colors.text }}
+                      >
                         {getSuggestionsForMood(overallMood)?.description}
                       </p>
                     </div>
@@ -238,43 +270,72 @@ export default function Home() {
                 </div>
               )}
 
-              <div className='space-y-3'>
-                <p className='text-sm text-gray-600'>Individual Entries</p>
+              {/* Individual History List */}
+              <div className='space-y-4'>
+                <p
+                  className='text-xs uppercase font-bold tracking-widest opacity-50'
+                  style={{ color: THEME.colors.text }}
+                >
+                  History
+                </p>
+
                 {entriesForSelectedDate.length > 0 ? (
                   entriesForSelectedDate.map((entry) => (
-                    <div
+                    /* PASTE THE CUSTOM BUTTON HERE */
+                    <CustomButton
                       key={entry.id}
-                      className='bg-white border rounded-lg p-4 shadow-sm'
+                      variant='outline'
+                      onClick={() => {
+                        // This saves the specific entry data so MoodEntry.tsx can read it
+                        localStorage.setItem(
+                          'viewMoodEntry',
+                          JSON.stringify(entry),
+                        );
+                        navigate('/mood-entry');
+                      }}
+                      className='px-4 py-4 h-auto mb-3'
                     >
-                      <div className='flex items-center justify-between'>
-                        <div className='flex items-center gap-2'>
+                      <div className='flex items-center justify-between w-full'>
+                        <div className='flex items-center gap-3'>
                           <img
                             src={getMoodImage(entry.mood_type)}
-                            className='w-10 h-10'
-                            alt=''
+                            className='w-12 h-12 object-contain'
+                            alt={entry.mood_type}
                           />
-                          <div>
-                            <p className='font-medium'>{entry.mood_type}</p>
-                            <p className='text-sm text-gray-500'>
+                          <div className='text-left'>
+                            <p
+                              className='font-bold text-base'
+                              style={{ color: THEME.colors.text }}
+                            >
+                              {entry.mood_type}
+                            </p>
+                            <p
+                              className='text-sm opacity-70 font-medium'
+                              style={{ color: THEME.colors.text }}
+                            >
                               {entry.emotion}
                             </p>
                           </div>
                         </div>
-                        <span className='text-xs text-gray-400'>
-                          {entry.created_at
-                            ? format(new Date(entry.created_at), 'h:mm a')
-                            : ''}
-                        </span>
+
+                        <div className='text-right'>
+                          <span
+                            className='text-xs opacity-40 font-bold'
+                            style={{ color: THEME.colors.text }}
+                          >
+                            {entry.created_at
+                              ? format(new Date(entry.created_at), 'h:mm a')
+                              : ''}
+                          </span>
+                        </div>
                       </div>
-                      {entry.note && (
-                        <p className='text-sm text-gray-600 mt-2'>
-                          {entry.note}
-                        </p>
-                      )}
-                    </div>
+                    </CustomButton>
                   ))
                 ) : (
-                  <p className='text-gray-500 text-center py-8'>
+                  <p
+                    className='text-center py-10 opacity-50'
+                    style={{ color: THEME.colors.text }}
+                  >
                     No entries yet.
                   </p>
                 )}
@@ -284,15 +345,20 @@ export default function Home() {
         </div>
       </div>
 
-      <button
-        onClick={() => {
-          localStorage.setItem('currentMoodDate', selectedDateStr); // <--- HERE
-          navigate('/mood-selection');
-        }}
-        className='fixed bottom-24 left-1/2 -translate-x-1/2 w-16 h-16 bg-cyan-500 rounded-full flex items-center justify-center shadow-lg text-white'
-      >
-        <Plus size={32} />
-      </button>
+      {/* Floating Plus Button using Custom Style */}
+      <div className='fixed bottom-24 left-1/2 -translate-x-1/2'>
+        <CustomButton
+          variant='primary'
+          fullWidth={false}
+          onClick={() => {
+            localStorage.setItem('currentMoodDate', selectedDateStr);
+            navigate('/mood-selection');
+          }}
+          className='w-16 h-16 rounded-full shadow-xl p-0'
+        >
+          <Plus size={32} />
+        </CustomButton>
+      </div>
     </div>
   );
 }
