@@ -2,7 +2,7 @@ import React from 'react';
 
 // --- BUTTON COMPONENT ---
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'outline' | 'ghost' | 'selected';
   fullWidth?: boolean;
 }
 
@@ -13,20 +13,24 @@ export const CustomButton = ({
   className = '',
   ...props
 }: ButtonProps) => {
-  const base =
-    'py-4 px-6 rounded-2xl font-bold transition-all active:scale-95 select-none flex items-center justify-center gap-2 touch-manipulation';
+  const baseStyles =
+    'py-4 px-6 rounded-2xl font-bold transition-all active:scale-95 touch-manipulation select-none outline-none flex items-center justify-center text-center';
+  const widthStyle = fullWidth ? 'w-full' : 'w-auto';
 
   const variants = {
-    primary: 'bg-cyan-500 text-white shadow-md active:bg-cyan-600',
-    secondary: 'bg-cyan-50 text-cyan-600 active:bg-cyan-100',
-    outline:
-      'border-2 border-gray-100 bg-white text-gray-700 active:border-gray-200',
-    ghost: 'bg-transparent text-gray-500 active:bg-gray-50',
+    // Solid Cyan (Used for 'Continue')
+    primary: 'bg-cyan-500 text-white shadow-lg shadow-cyan-100',
+    // Light Cyan Fill (Used for 'Selected Emotion')
+    selected: 'bg-cyan-50 border-2 border-cyan-500 text-cyan-600',
+    // Simple Border (Used for 'Unselected Emotion')
+    outline: 'bg-white border-2 border-gray-100 text-gray-400 font-medium',
+    // No Background (Used for 'X' button)
+    ghost: 'bg-transparent text-gray-400 hover:bg-gray-50',
   };
 
   return (
     <button
-      className={`${base} ${variants[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={`${baseStyles} ${widthStyle} ${variants[variant]} ${className}`}
       {...props}
     >
       {children}

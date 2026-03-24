@@ -200,9 +200,7 @@ export default function Home() {
           </h3>
 
           {loading ? (
-            <p className='text-center text-gray-400 py-10'>
-              Syncing with Supabase...
-            </p>
+            <p className='text-center text-gray-400 py-10'>Loading...</p>
           ) : (
             <>
               {overallMood && (

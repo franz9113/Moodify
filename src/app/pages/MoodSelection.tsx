@@ -2,10 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { X } from 'lucide-react';
 import { MOODS } from '@/app/utils/moodConfig';
-import {
-  CustomButton,
-  CustomInput,
-} from '@/app/components/custom/CustomComponents';
+import { CustomButton } from '@/app/components/custom/CustomComponents';
 
 const emotions = {
   Happy: ['Joyful', 'Excited', 'Content', 'Grateful', 'Proud'],
@@ -19,47 +16,26 @@ export default function MoodSelection() {
   const navigate = useNavigate();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
-  const [customEmotion, setCustomEmotion] = useState('');
-  const [showCustomInput, setShowCustomInput] = useState(false);
-
-  const handleContinue = () => {
-    const finalEmotion =
-      showCustomInput && customEmotion ? customEmotion : selectedEmotion;
-
-    if (selectedMood && (selectedEmotion || customEmotion)) {
-      // Get the date we saved from the Home calendar
-      const savedDate = localStorage.getItem('currentMoodDate');
-      const currentDate = savedDate || new Date().toISOString().split('T')[0];
-
-      const moodData = {
-        mood: selectedMood,
-        emotion: finalEmotion,
-        date: currentDate,
-        created_at: new Date().toISOString(),
-      };
-
-      localStorage.setItem('currentMoodEntry', JSON.stringify(moodData));
-      navigate('/questions');
-    }
-  };
 
   return (
-    <div className='h-full flex flex-col bg-white'>
+    <div className='h-screen flex flex-col bg-white'>
       {/* Header */}
-      <div className='px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10'>
+      <div className='px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white'>
         <h1 className='text-xl font-bold text-gray-800'>
           How are you feeling?
         </h1>
-        <button
+        <CustomButton
+          variant='ghost'
+          fullWidth={false}
           onClick={() => navigate('/')}
-          className='p-2 hover:bg-gray-100 rounded-full text-gray-400'
+          className='p-2'
         >
           <X size={24} />
-        </button>
+        </CustomButton>
       </div>
 
-      <div className='flex-1 overflow-y-auto px-6 py-6'>
-        {/* Mood Selection */}
+      <div className='flex-1 overflow-y-auto px-6 py-6 pb-32'>
+        {/* Mood Selection - Large Icon Buttons */}
         <div className='mb-10'>
           <h2 className='text-lg font-semibold mb-6 text-gray-700'>
             What are you feeling today?
@@ -71,16 +47,19 @@ export default function MoodSelection() {
                 onClick={() => {
                   setSelectedMood(mood.name);
                   setSelectedEmotion(null);
-                  setShowCustomInput(false);
                 }}
-                className={`flex flex-col items-center gap-2 transition-all flex-1 ${
+                className={`flex flex-col items-center gap-2 transition-all flex-1 touch-manipulation active:scale-90 ${
                   selectedMood === mood.name
                     ? 'scale-110'
                     : 'opacity-40 grayscale-[50%]'
                 }`}
               >
                 <div
-                  className={`p-1 rounded-full transition-all ${selectedMood === mood.name ? 'ring-4 ring-cyan-500' : 'ring-0'}`}
+                  className={`p-1 rounded-full transition-all ${
+                    selectedMood === mood.name
+                      ? 'ring-4 ring-cyan-500'
+                      : 'ring-0'
+                  }`}
                 >
                   <img
                     src={mood.image}
@@ -89,7 +68,11 @@ export default function MoodSelection() {
                   />
                 </div>
                 <span
-                  className={`text-[10px] font-bold uppercase tracking-wider ${selectedMood === mood.name ? 'text-cyan-600' : 'text-gray-400'}`}
+                  className={`text-[10px] font-bold uppercase tracking-wider ${
+                    selectedMood === mood.name
+                      ? 'text-cyan-600'
+                      : 'text-gray-400'
+                  }`}
                 >
                   {mood.name}
                 </span>
@@ -98,57 +81,35 @@ export default function MoodSelection() {
           </div>
         </div>
 
-        {/* Emotion Selection */}
+        {/* Emotion Buttons - Using the new 'selected' variant */}
         {selectedMood && (
           <div className='space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500'>
             <h2 className='text-lg font-semibold mb-4 text-gray-700'>
               What emotion are you experiencing?
             </h2>
-
             {emotions[selectedMood as keyof typeof emotions].map((emotion) => (
               <CustomButton
                 key={emotion}
-                variant={
-                  selectedEmotion === emotion && !showCustomInput
-                    ? 'primary'
-                    : 'outline'
-                }
-                onClick={() => {
-                  setSelectedEmotion(emotion);
-                  setShowCustomInput(false);
-                }}
+                // SWITCH: 'selected' for light fill, 'outline' for unselected
+                variant={selectedEmotion === emotion ? 'selected' : 'outline'}
+                onClick={() => setSelectedEmotion(emotion)}
               >
                 {emotion}
               </CustomButton>
             ))}
-
-            <CustomButton
-              variant={showCustomInput ? 'secondary' : 'outline'}
-              className='border-dashed'
-              onClick={() => {
-                setShowCustomInput(!showCustomInput);
-                setSelectedEmotion(null);
-              }}
-            >
-              {showCustomInput ? 'Cancel Custom' : '+ Add Custom Emotion'}
-            </CustomButton>
-
-            {showCustomInput && (
-              <CustomInput
-                autoFocus
-                value={customEmotion}
-                onChange={(e) => setCustomEmotion(e.target.value)}
-                placeholder='Type your emotion here...'
-              />
-            )}
           </div>
         )}
       </div>
 
-      {/* Footer Continue Button */}
-      {selectedMood && (selectedEmotion || customEmotion) && (
-        <div className='px-6 py-6 border-t border-gray-50 bg-white'>
-          <CustomButton onClick={handleContinue}>Continue</CustomButton>
+      {/* Primary Action Button (Solid Cyan) */}
+      {selectedMood && selectedEmotion && (
+        <div className='fixed bottom-0 left-0 right-0 px-6 py-6 bg-white border-t border-gray-50'>
+          <CustomButton
+            variant='primary'
+            onClick={() => navigate('/questions')}
+          >
+            Continue
+          </CustomButton>
         </div>
       )}
     </div>
