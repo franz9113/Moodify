@@ -1,56 +1,57 @@
-import { calculateOverallMood } from './moodConfig';
+import { supabase } from './supabaseClient';
 
 export interface MoodEntry {
-  id: string;
+  id?: string;
+  user_id?: string;
   date: string;
-  mood: string;
+  mood_type: string;
   emotion: string;
-  whatMadeYouFeel: string;
-  whatDidYouDo: string;
-  wasItRight: string;
-  bodyParts: string[];
-  journal: string;
-  suggestion: string;
-  timestamp: number;
+  note: string;
+  created_at?: string;
 }
 
-const STORAGE_KEY = 'moodEntries';
+const TEMP_USER_ID = '1';
 
-export const saveMoodEntry = (entry: MoodEntry) => {
-  const entries = getMoodEntries();
-  entries.push(entry);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+export const saveMoodEntry = async (entry: Omit<MoodEntry, 'user_id'>) => {
+  const { data, error } = await supabase
+    .from('mood_entries')
+    .insert([{ ...entry, user_id: TEMP_USER_ID }])
+    .select();
+  return { data, error };
 };
 
-export const getMoodEntries = (): MoodEntry[] => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  return stored ? JSON.parse(stored) : [];
+export const getMoodEntriesByDate = async (
+  date: string,
+): Promise<MoodEntry[]> => {
+  const { data } = await supabase
+    .from('mood_entries')
+    .select('*')
+    .eq('user_id', TEMP_USER_ID)
+    .eq('date', date)
+    .order('created_at', { ascending: false });
+
+  return data || [];
 };
 
-export const getMoodEntriesByDate = (date: string): MoodEntry[] => {
-  const entries = getMoodEntries();
-  return entries.filter((entry) => entry.date === date);
+export const getAllMoodEntries = async (): Promise<MoodEntry[]> => {
+  const { data } = await supabase
+    .from('mood_entries')
+    .select('*')
+    .eq('user_id', TEMP_USER_ID);
+  return data || [];
 };
 
-export const getAllMoodsByDate = (): Record<string, MoodEntry[]> => {
-  const entries = getMoodEntries();
-  const grouped: Record<string, MoodEntry[]> = {};
-
-  entries.forEach((entry) => {
-    if (!grouped[entry.date]) {
-      grouped[entry.date] = [];
-    }
-    // grouped[entry.date].push(entry);
-    (grouped[entry.date] ??= []).push(entry);
-  });
-
-  return grouped;
+// --- ADD THESE TWO FOR THE HOME PAGE ---
+export const getOverallMoodForDate = (entries: MoodEntry[]) => {
+  return entries[0]?.mood_type || null;
 };
 
-export const getOverallMoodForDate = (date: string): string | null => {
-  const entries = getMoodEntriesByDate(date);
-  if (entries.length === 0) return null;
-
-  const moods = entries.map((entry) => entry.mood);
-  return calculateOverallMood(moods);
+export const formatMoodsByDate = (allEntries: MoodEntry[]) => {
+  return allEntries.reduce(
+    (acc, entry) => {
+      acc[entry.date] = entry.mood_type;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 };

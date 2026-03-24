@@ -55,6 +55,16 @@ export const getMoodValue = (moodName: string) => {
   return getMoodConfig(moodName).value;
 };
 
+export const getMoodBgColor = (mood: string) => {
+  const m = mood?.toLowerCase();
+  if (m === 'happy') return 'bg-[#FCD34D]'; // Soft Amber
+  if (m === 'calm') return 'bg-[#6EE7B7]'; // Soft Emerald
+  if (m === 'mad') return 'bg-[#FCA5A5]'; // Soft Rose
+  if (m === 'exhausted') return 'bg-[#C4B5FD]'; // Soft Purple
+  if (m === 'sad') return 'bg-[#22D3EE]'; // Soft Sky Blue
+  return 'bg-[#F9FAFB]'; // Default Gray
+};
+
 // Calculate overall mood from multiple entries
 export const calculateOverallMood = (moods: string[]): string => {
   if (moods.length === 0) return 'Calm';
