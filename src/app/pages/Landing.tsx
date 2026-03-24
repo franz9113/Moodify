@@ -18,13 +18,22 @@ export default function Landing() {
         <h1 className='text-4xl font-bold text-sky-400'>Moodify</h1>
       </div>
 
-      {/* Start Tracking Button */}
-      <div className='absolute bottom-[20%] w-full flex justify-center'>
+      {/* Action Buttons */}
+      <div className='absolute bottom-[15%] w-full flex flex-col items-center gap-4'>
+        {/* Main Button */}
         <button
-          onClick={() => navigate('/home')}
-          className='px-10 py-3 bg-white text-black font-bold rounded-full shadow-lg active:scale-95 transition-all'
+          onClick={() => navigate('/login')} // Changed from /home to /login
+          className='px-10 py-4 bg-white text-black font-bold rounded-full shadow-lg active:scale-95 transition-all w-[280px]'
         >
           Start Tracking
+        </button>
+
+        {/* Secondary Login Link */}
+        <button
+          onClick={() => navigate('/login')}
+          className='text-white text-sm font-bold drop-shadow-md opacity-80 hover:opacity-100 transition-opacity'
+        >
+          Already have an account? Login
         </button>
       </div>
     </div>

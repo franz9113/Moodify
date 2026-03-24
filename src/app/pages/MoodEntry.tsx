@@ -175,7 +175,7 @@ export default function MoodEntry() {
 
             {/* Recommendation Box - Specifically styled for the Cyan Highlight */}
             <div
-              className='rounded-2xl p-6 border-2 shadow-md flex items-start gap-4 animate-in zoom-in duration-500 delay-500'
+              className='rounded-2xl p-6 border-2 shadow-md flex items-start gap-4'
               style={{
                 backgroundColor: `${THEME.colors.primary}20`,
                 borderColor: THEME.colors.primary,
@@ -190,8 +190,7 @@ export default function MoodEntry() {
                   Recommended tool
                 </p>
                 <p
-                  className='text-lg font-black'
-                  leading-tight
+                  className='text-lg font-black leading-tight'
                   style={{ color: THEME.colors.text }}
                 >
                   {recommendedTool}

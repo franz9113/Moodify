@@ -110,21 +110,21 @@ export default function Home() {
       style={{ backgroundColor: THEME.colors.background }}
     >
       {/* Header */}
-      <div className='px-6 py-4 flex justify-center bg-white shadow-sm'>
-        <img src={logoImage} alt='Moodify' className='h-12' />
+      <div className='px-6 flex justify-center bg-white shadow-sm'>
+        <img src={logoImage} alt='Moodify' className='h-24' />
       </div>
 
       <div className='flex-1 overflow-y-auto'>
         {/* Requirement (d): Daily Positive Comment */}
-        <div
+        {/* <div
           className='px-6 pt-6 text-center italic opacity-80'
           style={{ color: THEME.colors.text }}
         >
           "You're doing great today!"
-        </div>
+        </div> */}
 
         {/* Date Selector Section */}
-        <div className='px-6 py-4'>
+        <div className='p-4'>
           <div className='flex items-center gap-2'>
             <CustomButton
               variant={showFullCalendar ? 'primary' : 'outline'}
@@ -132,10 +132,10 @@ export default function Home() {
               onClick={() => setShowFullCalendar(!showFullCalendar)}
               className='w-12 h-12 p-0'
             >
-              <Calendar size={20} />
+              <Calendar size={15} />
             </CustomButton>
 
-            <div className='flex-1 grid grid-cols-7 gap-1'>
+            <div className='flex-1 grid grid-cols-7 gap-2'>
               {weekDays.map((day) => (
                 <button
                   key={day.toISOString()}
@@ -272,21 +272,22 @@ export default function Home() {
 
               {/* Individual History List */}
               <div className='space-y-4'>
-                <p
-                  className='text-xs uppercase font-bold tracking-widest opacity-50'
-                  style={{ color: THEME.colors.text }}
-                >
-                  History
-                </p>
+                {/* Header: Only shows if there are actual entries */}
+                {entriesForSelectedDate.length > 0 && (
+                  <p
+                    className='text-xs uppercase font-bold tracking-widest opacity-50'
+                    style={{ color: THEME.colors.text }}
+                  >
+                    Individual Entries
+                  </p>
+                )}
 
                 {entriesForSelectedDate.length > 0 ? (
                   entriesForSelectedDate.map((entry) => (
-                    /* PASTE THE CUSTOM BUTTON HERE */
                     <CustomButton
                       key={entry.id}
                       variant='outline'
                       onClick={() => {
-                        // This saves the specific entry data so MoodEntry.tsx can read it
                         localStorage.setItem(
                           'viewMoodEntry',
                           JSON.stringify(entry),
@@ -317,7 +318,6 @@ export default function Home() {
                             </p>
                           </div>
                         </div>
-
                         <div className='text-right'>
                           <span
                             className='text-xs opacity-40 font-bold'
@@ -332,6 +332,7 @@ export default function Home() {
                     </CustomButton>
                   ))
                 ) : (
+                  /* This shows when length is 0 */
                   <p
                     className='text-center py-10 opacity-50'
                     style={{ color: THEME.colors.text }}

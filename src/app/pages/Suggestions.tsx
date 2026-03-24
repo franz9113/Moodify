@@ -49,6 +49,7 @@ export default function Suggestions() {
     const entryToSave = {
       date: finalData.date,
       mood_type: finalData.mood,
+      mood_value: finalData.moodValue,
       emotion: finalData.emotion,
       note: finalData.journal || '',
       whatMadeYouFeel: finalData.whatMadeYouFeel,

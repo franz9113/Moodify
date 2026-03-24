@@ -9,8 +9,17 @@ import Suggestions from '@/app/pages/Suggestions';
 import Statistics from '@/app/pages/Statistics';
 import Tools from '@/app/pages/Tools';
 import Landing from '@/app/pages/Landing';
+import Login from './pages/Login';
 
 export const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    path: '/landing',
+    element: <Landing />,
+  },
   {
     path: '/',
     element: <Root />, // Changed from Component
