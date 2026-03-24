@@ -13,18 +13,16 @@ import Landing from '@/app/pages/Landing';
 export const router = createBrowserRouter([
   {
     path: '/',
-    Component: Root,
+    element: <Root />, // Changed from Component
     children: [
-      // { index: true, Component: Landing },
-      // { path: 'home', Component: Home },
-      { index: true, Component: Home },
-      { path: 'mood-entry', Component: MoodEntry },
-      { path: 'mood-selection', Component: MoodSelection },
-      { path: 'questions', Component: Questions },
-      { path: 'journal', Component: Journal },
-      { path: 'suggestions', Component: Suggestions },
-      { path: 'statistics', Component: Statistics },
-      { path: 'tools', Component: Tools },
+      { index: true, element: <Home /> }, // Changed from Component
+      { path: 'mood-entry', element: <MoodEntry /> },
+      { path: 'mood-selection', element: <MoodSelection /> },
+      { path: 'questions', element: <Questions /> },
+      { path: 'journal', element: <Journal /> },
+      { path: 'suggestions', element: <Suggestions /> },
+      { path: 'statistics', element: <Statistics /> },
+      { path: 'tools', element: <Tools /> },
     ],
   },
 ]);

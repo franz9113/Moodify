@@ -55,23 +55,14 @@ export const getMoodValue = (moodName: string) => {
   return getMoodConfig(moodName).value;
 };
 
-export const getMoodBgColor = (moodType: string) => {
-  const mood = moodType?.toLowerCase();
-
-  switch (mood) {
-    case 'happy':
-      return 'bg-amber-400'; // Yellow
-    case 'calm':
-      return 'bg-emerald-300'; // Mint/Cyan
-    case 'exhausted':
-      return 'bg-purple-300'; // Lavender/Purple
-    case 'mad':
-      return 'bg-rose-400'; // Pink/Red
-    case 'sad':
-      return 'bg-cyan-400'; // Sky Blue
-    default:
-      return 'bg-gray-50';
-  }
+export const getMoodBgColor = (mood: string) => {
+  const m = mood?.toLowerCase();
+  if (m === 'happy') return 'bg-[#FBBF24]'; // Soft Amber
+  if (m === 'calm') return 'bg-[#6EE7B7]'; // Soft Emerald
+  if (m === 'mad') return 'bg-[#FB7185]'; // Soft Rose
+  if (m === 'exhausted') return 'bg-[#D8B4FE]'; // Soft Purple
+  if (m === 'sad') return 'bg-[#22D3EE]'; // Soft Sky Blue
+  return 'bg-[#F9FAFB]'; // Default Gray
 };
 
 // Calculate overall mood from multiple entries

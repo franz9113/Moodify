@@ -23,7 +23,7 @@ export const saveMoodEntry = async (entry: Omit<MoodEntry, 'user_id'>) => {
 export const getMoodEntriesByDate = async (
   date: string,
 ): Promise<MoodEntry[]> => {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('mood_entries')
     .select('*')
     .eq('user_id', TEMP_USER_ID)
@@ -34,9 +34,24 @@ export const getMoodEntriesByDate = async (
 };
 
 export const getAllMoodEntries = async (): Promise<MoodEntry[]> => {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('mood_entries')
     .select('*')
     .eq('user_id', TEMP_USER_ID);
   return data || [];
+};
+
+// --- ADD THESE TWO FOR THE HOME PAGE ---
+export const getOverallMoodForDate = (entries: MoodEntry[]) => {
+  return entries[0]?.mood_type || null;
+};
+
+export const formatMoodsByDate = (allEntries: MoodEntry[]) => {
+  return allEntries.reduce(
+    (acc, entry) => {
+      acc[entry.date] = entry.mood_type;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 };
