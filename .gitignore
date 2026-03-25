@@ -1,2 +1,4 @@
 node_modules
 .env.local
+dev-dist/sw.js
+dev-dist/workbox-5a5d9309.js
