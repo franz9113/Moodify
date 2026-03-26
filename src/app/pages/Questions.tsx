@@ -138,7 +138,9 @@ export default function Questions() {
           className='px-6 py-4 flex items-center justify-between border-b'
           style={{ borderColor: THEME.colors.neutral }}
         >
-          <h1 className='text-xl font-bold'>Where did you feel that?</h1>
+          <h1 className='text-lg font-bold'>
+            Focus on where your body is reacting to this mood
+          </h1>
           <button onClick={() => navigate('/app')} className='p-2'>
             <X size={24} />
           </button>
