@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router'; // Added useLocation
 import { X } from 'lucide-react';
 import { MOODS } from '@/app/utils/moodConfig';
 import { CustomButton } from '@/app/components/custom/CustomComponents';
 import { THEME } from '../utils/theme';
+import { supabase } from '../utils/supabaseClient';
 
 const emotions = {
   Happy: ['Joyful', 'Excited', 'Content', 'Grateful', 'Proud'],
@@ -13,7 +14,6 @@ const emotions = {
   Calm: ['Peaceful', 'Relaxed', 'Serene', 'Balanced', 'Centered'],
 };
 
-// Map mood names to numeric values for your database (int4)
 const MOOD_VALUES: Record<string, number> = {
   Happy: 5,
   Calm: 4,
@@ -24,36 +24,39 @@ const MOOD_VALUES: Record<string, number> = {
 
 export default function MoodSelection() {
   const navigate = useNavigate();
+  const { state } = useLocation(); // Catch the date passed from Home
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selectedMood || !selectedEmotion) return;
 
-    // 1. Check if a date was passed from the Home/Calendar screen
-    const savedDate = localStorage.getItem('currentMoodDate');
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    // 2. Fallback to today's date if no date was found in storage
-    const finalDate = savedDate || new Date().toISOString().split('T')[0];
+    // Fix: Ensure we use the date from Home.tsx state if it exists
+    const finalDate =
+      state?.selectedDate ||
+      localStorage.getItem('currentMoodDate') ||
+      new Date().toISOString().split('T')[0];
 
-    const newEntry = {
-      mood: selectedMood,
-      emotion: selectedEmotion,
-      moodValue: MOOD_VALUES[selectedMood] || 3,
-      date: finalDate, // This ensures it saves to the day you actually clicked!
-    };
+    // Fix: Pass all data through navigate state so Questions.tsx can read it
+    navigate('/app/questions', {
+      state: {
+        moodType: selectedMood,
+        moodSubtype: selectedEmotion,
+        moodValue: MOOD_VALUES[selectedMood] || 3,
+        selectedDate: finalDate,
+      },
+    });
 
-    localStorage.setItem('currentMoodEntry', JSON.stringify(newEntry));
-
-    // 3. Clear the temporary date so it doesn't "stick" for future entries
+    // Cleanup
     localStorage.removeItem('currentMoodDate');
-
-    navigate('/questions');
   };
 
   return (
     <div className='h-screen flex flex-col bg-white'>
-      {/* Header */}
       <div className='px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white'>
         <h1 className='text-xl font-bold text-gray-800'>
           How are you feeling?
@@ -61,7 +64,7 @@ export default function MoodSelection() {
         <CustomButton
           variant='ghost'
           fullWidth={false}
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/app')}
           className='p-2'
         >
           <X size={24} />
@@ -69,12 +72,10 @@ export default function MoodSelection() {
       </div>
 
       <div className='flex-1 overflow-y-auto px-6 py-6 pb-32'>
-        {/* Mood Selection */}
         <div className='mb-10'>
           <h2 className='text-lg font-semibold mb-6 text-gray-700'>
             What are you feeling today?
           </h2>
-
           <div className='flex justify-between items-center gap-2'>
             {MOODS.map((mood) => (
               <button
@@ -120,7 +121,6 @@ export default function MoodSelection() {
           </div>
         </div>
 
-        {/* Emotion Buttons */}
         {selectedMood && (
           <div className='space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500'>
             <h2 className='text-lg font-semibold mb-4 text-gray-700'>
@@ -139,9 +139,8 @@ export default function MoodSelection() {
         )}
       </div>
 
-      {/* Primary Action Button */}
       {selectedMood && selectedEmotion && (
-        <div className='fixed bottom-0 left-0 right-0 px-6 py-6 bg-white border-t border-gray-50'>
+        <div className='fixed bottom-0 left-0 right-0 px-6 py-6 bg-white border-t border-gray-50 z-10'>
           <CustomButton variant='primary' onClick={handleContinue}>
             Continue
           </CustomButton>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import {
   ChevronLeft,
@@ -7,13 +7,7 @@ import {
   Calendar,
   Sparkles,
 } from 'lucide-react';
-import {
-  getMoodEntriesByDate,
-  getAllMoodEntries,
-  getOverallMoodForDate,
-  formatMoodsByDate,
-  type MoodEntry,
-} from '@/app/utils/storage';
+import { supabase } from '@/app/utils/supabaseClient';
 import { getMoodColor, getMoodImage } from '@/app/utils/moodConfig';
 import { THEME } from '@/app/utils/theme';
 import { CustomButton } from '@/app/components/custom/CustomComponents';
@@ -31,6 +25,32 @@ import {
 } from 'date-fns';
 import logoImage from '@/assets/dea20f2c36e47fcd5e92a36dccb36262d7f3d9e8.png';
 
+// Mood Weight Configuration
+const MOOD_WEIGHTS: Record<string, number> = {
+  Happy: 5,
+  Calm: 4,
+  Exhausted: 2.5,
+  Sad: 2,
+  Mad: 1,
+};
+
+// Helper to calculate mood name from a list of entries
+const calculateOverallMoodName = (entries: any[]) => {
+  if (!entries || entries.length === 0) return null;
+
+  const totalScore = entries.reduce((sum, entry) => {
+    return sum + (MOOD_WEIGHTS[entry.mood] || 3);
+  }, 0);
+
+  const averageScore = totalScore / entries.length;
+
+  if (averageScore >= 4.5) return 'Happy';
+  if (averageScore >= 3.5) return 'Calm';
+  if (averageScore >= 2.2) return 'Exhausted'; // Adjusted threshold for Exhausted
+  if (averageScore >= 1.5) return 'Sad';
+  return 'Mad';
+};
+
 export default function Home() {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -38,28 +58,70 @@ export default function Home() {
   const [showFullCalendar, setShowFullCalendar] = useState(false);
   const [showOverallSuggestions, setShowOverallSuggestions] = useState(false);
 
-  const [entriesForSelectedDate, setEntriesForSelectedDate] = useState<
-    MoodEntry[]
-  >([]);
+  const [entriesForSelectedDate, setEntriesForSelectedDate] = useState<any[]>(
+    [],
+  );
   const [allMoodsMap, setAllMoodsMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-  const overallMood = getOverallMoodForDate(entriesForSelectedDate);
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      const [dayEntries, allEntries] = await Promise.all([
-        getMoodEntriesByDate(selectedDateStr),
-        getAllMoodEntries(),
-      ]);
-      setEntriesForSelectedDate(dayEntries);
-      setAllMoodsMap(formatMoodsByDate(allEntries));
-      setLoading(false);
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: allData, error: allError } = await supabase
+          .from('mood_entries')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true });
+
+        if (allError) throw allError;
+
+        // Group entries by date
+        const groupedByDate: Record<string, any[]> = {};
+        allData?.forEach((entry) => {
+          const dateKey = entry.date;
+          if (!dateKey) return; // Skip if date is somehow missing
+
+          if (!groupedByDate[dateKey]) {
+            groupedByDate[dateKey] = [];
+          }
+          groupedByDate[dateKey].push(entry);
+        });
+
+        // Create a map of Date -> Calculated Overall Mood
+        const moodMap: Record<string, string> = {};
+        Object.keys(groupedByDate).forEach((date) => {
+          // FIX: Added '?? []' to handle potential undefined values
+          const calculatedMood = calculateOverallMoodName(
+            groupedByDate[date] ?? [],
+          );
+          if (calculatedMood) moodMap[date] = calculatedMood;
+        });
+
+        setAllMoodsMap(moodMap);
+        // FIX: Added '?? []' here as well for safety
+        setEntriesForSelectedDate(groupedByDate[selectedDateStr] ?? []);
+      } catch (err) {
+        console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
     };
     loadData();
   }, [selectedDateStr]);
+
+  // Overall mood for the currently selected day view
+  const overallMood = useMemo(
+    () => calculateOverallMoodName(entriesForSelectedDate),
+    [entriesForSelectedDate],
+  );
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -77,7 +139,7 @@ export default function Home() {
 
   const getSuggestionsForMood = (mood: string | null) => {
     if (!mood)
-      return { title: 'Embrace this peace', description: 'You found balance.' };
+      return { title: 'No entries', description: 'Log your first mood!' };
     const suggestions: Record<string, { title: string; description: string }> =
       {
         Happy: {
@@ -109,21 +171,12 @@ export default function Home() {
       className='flex flex-col h-full pb-20'
       style={{ backgroundColor: THEME.colors.background }}
     >
-      {/* Header */}
       <div className='px-6 flex justify-center bg-white shadow-sm'>
         <img src={logoImage} alt='Moodify' className='h-24' />
       </div>
 
       <div className='flex-1 overflow-y-auto'>
-        {/* Requirement (d): Daily Positive Comment */}
-        {/* <div
-          className='px-6 pt-6 text-center italic opacity-80'
-          style={{ color: THEME.colors.text }}
-        >
-          "You're doing great today!"
-        </div> */}
-
-        {/* Date Selector Section */}
+        {/* Date Selector (Top Strip) */}
         <div className='p-4'>
           <div className='flex items-center gap-2'>
             <CustomButton
@@ -159,6 +212,7 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Full Month Calendar View */}
         {showFullCalendar && (
           <div className='px-6 py-4 border-t border-gray-200 bg-white shadow-inner'>
             <div className='flex items-center justify-between mb-4'>
@@ -238,7 +292,7 @@ export default function Home() {
 
                   {showOverallSuggestions && (
                     <div
-                      className='mt-3 bg-white border-2 rounded-2xl p-4 shadow-lg animate-in zoom-in-95 duration-200'
+                      className='mt-3 bg-white border-2 rounded-2xl p-4 shadow-lg animate-in zoom-in-95'
                       style={{ borderColor: THEME.colors.primary }}
                     >
                       <div className='flex items-center gap-2 mb-2'>
@@ -270,9 +324,7 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Individual History List */}
               <div className='space-y-4'>
-                {/* Header: Only shows if there are actual entries */}
                 {entriesForSelectedDate.length > 0 && (
                   <p
                     className='text-xs uppercase font-bold tracking-widest opacity-50'
@@ -292,23 +344,23 @@ export default function Home() {
                           'viewMoodEntry',
                           JSON.stringify(entry),
                         );
-                        navigate('/mood-entry');
+                        navigate('/app/mood-entry');
                       }}
                       className='px-4 py-4 h-auto mb-3'
                     >
                       <div className='flex items-center justify-between w-full'>
                         <div className='flex items-center gap-3'>
                           <img
-                            src={getMoodImage(entry.mood_type)}
+                            src={getMoodImage(entry.mood)}
                             className='w-12 h-12 object-contain'
-                            alt={entry.mood_type}
+                            alt={entry.mood}
                           />
                           <div className='text-left'>
                             <p
                               className='font-bold text-base'
                               style={{ color: THEME.colors.text }}
                             >
-                              {entry.mood_type}
+                              {entry.mood}
                             </p>
                             <p
                               className='text-sm opacity-70 font-medium'
@@ -332,7 +384,6 @@ export default function Home() {
                     </CustomButton>
                   ))
                 ) : (
-                  /* This shows when length is 0 */
                   <p
                     className='text-center py-10 opacity-50'
                     style={{ color: THEME.colors.text }}
@@ -346,14 +397,16 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Floating Plus Button using Custom Style */}
+      {/* Floating Action Button */}
       <div className='fixed bottom-24 left-1/2 -translate-x-1/2'>
         <CustomButton
           variant='primary'
           fullWidth={false}
           onClick={() => {
             localStorage.setItem('currentMoodDate', selectedDateStr);
-            navigate('/mood-selection');
+            navigate('/app/mood-selection', {
+              state: { selectedDate: selectedDateStr },
+            });
           }}
           className='w-16 h-16 rounded-full shadow-xl p-0'
         >

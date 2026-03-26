@@ -31,7 +31,7 @@ export default function Landing() {
         {/* Secondary Login Link */}
         <button
           onClick={() => navigate('/login')}
-          className='text-white text-sm font-bold drop-shadow-md opacity-80 hover:opacity-100 transition-opacity'
+          className='text-black text-md font-bold drop-shadow-md opacity-80 hover:opacity-100 transition-opacity'
         >
           Already have an account? Login
         </button>

@@ -3,31 +3,65 @@ import { useNavigate } from 'react-router';
 import { THEME } from '@/app/utils/theme';
 import { CustomButton } from '@/app/components/custom/CustomComponents';
 import { ChevronLeft } from 'lucide-react';
+import { supabase } from '../utils/supabaseClient';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // New state for mobile-friendly status messages
+  const [status, setStatus] = useState<{
+    message: string;
+    type: 'error' | 'success' | '';
+  }>({
+    message: '',
+    type: '',
+  });
+
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setStatus({ message: '', type: '' });
 
-    // Dummy Logic: Check for user/user
-    if (username.toLowerCase() === 'user' && password === 'user') {
-      localStorage.setItem('isLoggedIn', 'true');
-      // Use window.location to force the Router to re-check the Auth Guard
-      window.location.href = '/';
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        setStatus({ message: error.message, type: 'error' });
+      } else {
+        setStatus({
+          message: 'Account created! You can now sign in.',
+          type: 'success',
+        });
+        setIsSignUp(false);
+        setEmail('');
+        setPassword('');
+      }
     } else {
-      setError('Invalid credentials. Hint: use user / user');
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        setStatus({ message: 'Invalid email or password.', type: 'error' });
+      } else {
+        // Navigate to the main app dashboard
+        navigate('/app');
+      }
     }
+    setLoading(false);
   };
 
   return (
     <div className='h-screen flex flex-col bg-white'>
       {/* Header with Back Button */}
       <div className='px-4 py-4'>
-        <button onClick={() => navigate('/landing')} className='p-2 opacity-50'>
+        <button
+          onClick={() => navigate('/')}
+          className='p-2 opacity-50 outline-none active:scale-95 transition-transform'
+        >
           <ChevronLeft size={28} />
         </button>
       </div>
@@ -37,21 +71,26 @@ export default function Login() {
           className='text-3xl font-bold mb-2'
           style={{ color: THEME.colors.text }}
         >
-          Welcome Back
+          {isSignUp ? 'Create Account' : 'Welcome Back'}
         </h2>
-        <p className='opacity-50 mb-10'>Sign in to continue your journey.</p>
+        <p className='opacity-50 mb-10'>
+          {isSignUp
+            ? 'Start your journey with us.'
+            : 'Sign in to continue your journey.'}
+        </p>
 
-        <form onSubmit={handleLogin} className='space-y-4'>
+        <form onSubmit={handleAuth} className='space-y-4'>
           <div className='space-y-1'>
             <input
-              type='text'
-              placeholder='Username'
+              type='email'
+              placeholder='Email Address'
               className='w-full p-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-cyan-100 outline-none transition-all'
-              value={username}
+              value={email}
               onChange={(e) => {
-                setUsername(e.target.value);
-                setError('');
+                setEmail(e.target.value);
+                setStatus({ message: '', type: '' });
               }}
+              required
             />
           </div>
 
@@ -63,21 +102,42 @@ export default function Login() {
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                setError('');
+                setStatus({ message: '', type: '' });
               }}
+              required
             />
           </div>
 
-          {error && (
-            <p className='text-red-500 text-xs font-bold px-2 animate-pulse'>
-              {error}
-            </p>
+          {/* Mobile-friendly Status Message Container */}
+          {status.message && (
+            <div
+              className={`p-4 rounded-2xl text-sm font-bold transition-all animate-in fade-in slide-in-from-top-2 ${
+                status.type === 'error'
+                  ? 'bg-red-50 text-red-500'
+                  : 'bg-emerald-50 text-emerald-600'
+              }`}
+            >
+              {status.message}
+            </div>
           )}
 
-          <div className='pt-6'>
-            <CustomButton variant='primary' type='submit'>
-              Login
+          <div className='pt-6 space-y-4'>
+            <CustomButton variant='primary' type='submit' disabled={loading}>
+              {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Login'}
             </CustomButton>
+
+            <button
+              type='button'
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setStatus({ message: '', type: '' });
+              }}
+              className='w-full text-center text-sm font-medium opacity-60 hover:opacity-100 transition-opacity py-2'
+            >
+              {isSignUp
+                ? 'Already have an account? Login'
+                : "Don't have an account? Sign Up"}
+            </button>
           </div>
         </form>
       </div>
