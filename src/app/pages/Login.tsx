@@ -12,7 +12,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
 
-  // New state for mobile-friendly status messages
   const [status, setStatus] = useState<{
     message: string;
     type: 'error' | 'success' | '';
@@ -20,6 +19,43 @@ export default function Login() {
     message: '',
     type: '',
   });
+
+  // 1. Google Login Handler
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        // Ensure this matches your Supabase redirect settings
+        redirectTo: window.location.origin + '/app',
+      },
+    });
+
+    if (error) {
+      setStatus({ message: error.message, type: 'error' });
+      setLoading(false);
+    }
+  };
+
+  // 2. Forgot Password Handler
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setStatus({ message: 'Please enter your email first.', type: 'error' });
+      return;
+    }
+    
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password',
+    });
+
+    if (error) {
+      setStatus({ message: error.message, type: 'error' });
+    } else {
+      setStatus({ message: 'Password reset link sent to your email!', type: 'success' });
+    }
+    setLoading(false);
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +83,6 @@ export default function Login() {
       if (error) {
         setStatus({ message: 'Invalid email or password.', type: 'error' });
       } else {
-        // Navigate to the main app dashboard
         navigate('/app');
       }
     }
@@ -56,7 +91,6 @@ export default function Login() {
 
   return (
     <div className='h-screen flex flex-col bg-white'>
-      {/* Header with Back Button */}
       <div className='px-4 py-4'>
         <button
           onClick={() => navigate('/')}
@@ -94,21 +128,44 @@ export default function Login() {
             />
           </div>
 
-          <div className='space-y-1'>
-            <input
-              type='password'
-              placeholder='Password'
-              className='w-full p-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-cyan-100 outline-none transition-all'
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setStatus({ message: '', type: '' });
-              }}
-              required
-            />
-          </div>
+          {!isSignUp && (
+            <div className='space-y-1'>
+              <input
+                type='password'
+                placeholder='Password'
+                className='w-full p-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-cyan-100 outline-none transition-all'
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setStatus({ message: '', type: '' });
+                }}
+                required
+              />
+              <div className='flex justify-end pr-2'>
+                <button 
+                  type="button"
+                  onClick={() => navigate('/request-reset')}
+                  className="text-xs font-medium opacity-50 hover:opacity-100"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            </div>
+          )}
 
-          {/* Mobile-friendly Status Message Container */}
+          {isSignUp && (
+            <div className='space-y-1'>
+              <input
+                type='password'
+                placeholder='Password'
+                className='w-full p-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-cyan-100 outline-none transition-all'
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          )}
+
           {status.message && (
             <div
               className={`p-4 rounded-2xl text-sm font-bold transition-all animate-in fade-in slide-in-from-top-2 ${
@@ -125,6 +182,23 @@ export default function Login() {
             <CustomButton variant='primary' type='submit' disabled={loading}>
               {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Login'}
             </CustomButton>
+
+            {/* Google Login Divider */}
+            <div className="flex items-center py-2">
+              <div className="flex-grow border-t border-gray-100"></div>
+              <span className="px-3 text-xs opacity-30 font-bold">OR</span>
+              <div className="flex-grow border-t border-gray-100"></div>
+            </div>
+
+            <button
+              type='button'
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className='w-full flex items-center justify-center gap-3 p-4 rounded-2xl bg-white border-2 border-gray-50 font-bold active:scale-95 transition-all'
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+              <span style={{ color: THEME.colors.text }}>Continue with Google</span>
+            </button>
 
             <button
               type='button'

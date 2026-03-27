@@ -388,7 +388,7 @@ export default function Home() {
                     className='text-center py-10 opacity-50'
                     style={{ color: THEME.colors.text }}
                   >
-                    No entries yet.
+                    No mood entries for this day
                   </p>
                 )}
               </div>

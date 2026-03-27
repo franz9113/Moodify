@@ -1,32 +1,20 @@
 import React from 'react';
-import { THEME } from '../../utils/theme';
 
-interface BodyPart {
-  id: string;
-  path: string;
-  label: string;
-}
-
-const BODY_PARTS: BodyPart[] = [
-  {
-    id: 'head',
-    label: 'Head',
-    path: 'M50,2 C45,2 41,6 41,11 C41,16 45,20 50,20 C55,20 59,16 59,11 C59,6 55,2 50,2',
-  },
-  { id: 'chest', label: 'Chest', path: 'M41,22 L59,22 L62,40 L38,40 Z' },
-  { id: 'stomach', label: 'Stomach', path: 'M38,42 L62,42 L60,55 L40,55 Z' },
-  { id: 'left-arm', label: 'Left Arm', path: 'M36,22 L30,45 L35,45 L39,22 Z' },
-  {
-    id: 'right-arm',
-    label: 'Right Arm',
-    path: 'M64,22 L70,45 L65,45 L61,22 Z',
-  },
-  { id: 'left-leg', label: 'Left Leg', path: 'M40,57 L38,98 L48,98 L49,57 Z' },
-  {
-    id: 'right-leg',
-    label: 'Right Leg',
-    path: 'M60,57 L62,98 L52,98 L51,57 Z',
-  },
+// Precise percentage-based coordinates for the realistic silhouette
+const BODY_ZONES = [
+  { id: 'head', label: 'Head', top: '2%', left: '42%', width: '16%', height: '14%' },
+  { id: 'chest', label: 'Chest', top: '21%', left: '38%', width: '24%', height: '15%' },
+  { id: 'stomach', label: 'Stomach', top: '37%', left: '40%', width: '20%', height: '12%' },
+  { id: 'left-arm-upper', label: 'L Upper Arm', top: '22%', left: '28%', width: '9%', height: '18%' },
+  { id: 'right-arm-upper', label: 'R Upper Arm', top: '22%', left: '63%', width: '9%', height: '18%' },
+  { id: 'left-forearm', label: 'L Forearm', top: '41%', left: '23%', width: '8%', height: '15%' },
+  { id: 'right-forearm', label: 'R Forearm', top: '41%', left: '69%', width: '8%', height: '15%' },
+  { id: 'left-hand', label: 'L Hand', top: '57%', left: '19%', width: '10%', height: '10%' },
+  { id: 'right-hand', label: 'R Hand', top: '57%', left: '71%', width: '10%', height: '10%' },
+  { id: 'left-leg-upper', label: 'L Thigh', top: '55%', left: '36%', width: '13%', height: '20%' },
+  { id: 'right-leg-upper', label: 'R Thigh', top: '55%', left: '51%', width: '13%', height: '20%' },
+  { id: 'left-foot', label: 'L Foot', top: '90%', left: '37%', width: '10%', height: '8%' },
+  { id: 'right-foot', label: 'R Foot', top: '90%', left: '53%', width: '10%', height: '8%' },
 ];
 
 interface BodyMapProps {
@@ -36,27 +24,38 @@ interface BodyMapProps {
 
 export default function BodyMap({ onSelect, selectedParts }: BodyMapProps) {
   return (
-    <div className='flex items-center justify-center w-full h-full'>
-      <svg
-        viewBox='0 0 100 100'
-        className='w-full h-full max-h-[50vh] drop-shadow-xl'
-        style={{ filter: 'drop-shadow(0px 12px 16px rgba(0, 0, 0, 0.12))' }}
-      >
-        {BODY_PARTS.map((part) => {
-          const isSelected = selectedParts.includes(part.id);
+    <div className="relative w-full max-w-md mx-auto aspect-[2/3] bg-transparent">
+      {/* 1. The Realistic Base Image */}
+      <img 
+        src="/body-silhouette.jpg" 
+        alt="Realistic Body Map" 
+        className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+      />
+
+      {/* 2. Transparent Interaction Layer */}
+      <div className="absolute inset-0">
+        {BODY_ZONES.map((zone) => {
+          const isSelected = selectedParts.includes(zone.id);
           return (
-            <path
-              key={part.id}
-              d={part.path}
-              fill={isSelected ? THEME.colors.primary : THEME.colors.neutral}
-              stroke={isSelected ? THEME.colors.primary : '#B4BFBA'}
-              strokeWidth='0.8'
-              className='transition-all duration-300 cursor-pointer'
-              onClick={() => onSelect(part.id)}
+            <button
+              key={zone.id}
+              onClick={() => onSelect(zone.id)}
+              title={zone.label}
+              className={`absolute transition-all duration-200 rounded-sm ${
+                isSelected 
+                  ? 'bg-blue-500/30 border-2 border-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.5)]' 
+                  : 'bg-transparent hover:bg-white/10'
+              }`}
+              style={{
+                top: zone.top,
+                left: zone.left,
+                width: zone.width,
+                height: zone.height,
+              }}
             />
           );
         })}
-      </svg>
+      </div>
     </div>
   );
 }

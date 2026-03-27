@@ -11,6 +11,8 @@ import Suggestions from '@/app/pages/Suggestions';
 import Statistics from '@/app/pages/Statistics';
 import Tools from '@/app/pages/Tools';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword'; // 1. Add this import
+import RequestReset from './pages/RequestReset';
 
 export const router = createBrowserRouter([
   // 1. PUBLIC AREA (No login required)
@@ -22,14 +24,22 @@ export const router = createBrowserRouter([
     path: '/login',
     element: <Login />,
   },
+  {
+    path: '/reset-password', // 2. Add this route for the email link
+    element: <ResetPassword />,
+  },
+  {
+  path: '/request-reset',
+  element: <RequestReset />,
+},
 
   // 2. PRIVATE AREA (The Gatekeeper is here)
   {
-    path: '/app', // All private pages now start with /app
+    path: '/app', 
     element: <ProtectedRoute />,
     children: [
       {
-        path: '', // This acts as the "Home" of the private area (/app)
+        path: '', 
         element: <Root />,
         children: [
           { index: true, element: <Home /> },
