@@ -41,6 +41,7 @@ interface MoodData {
   count: number;
 }
 
+
 const getMoodLabel = (value: number) => {
   if (!value || value === 0) return 'No Entry';
   if (value >= 4.5) return 'Great';
@@ -84,6 +85,16 @@ export default function Statistics() {
     else setReferenceDate(addYears(referenceDate, 1));
   };
 
+  const getRangeLabel = () => {
+  if (viewMode === 'week') {
+    return `${format(startOfWeek(referenceDate), 'MMM d')} - ${format(endOfWeek(referenceDate), 'MMM d')}`;
+  } else if (viewMode === 'month') {
+    return format(referenceDate, 'MMMM yyyy');
+  } else {
+    return format(referenceDate, 'yyyy');
+  }
+};
+
   const activeEntries = useMemo(() => {
     const startStr = format(
       viewMode === 'week'
@@ -118,64 +129,50 @@ export default function Statistics() {
       .slice(0, 5);
   }, [activeEntries]);
 
-  const trendData = useMemo(() => {
-    const entryMap: Record<string, { sum: number; count: number }> = {};
-    allEntries.forEach((e) => {
-      const d = e.date;
-      if (!entryMap[d]) entryMap[d] = { sum: 0, count: 0 };
-      entryMap[d].sum += e.mood_value || getMoodValue(e.mood);
-      entryMap[d].count += 1;
-    });
+ const trendData = useMemo(() => {
+  const entryMap: Record<string, { sum: number; count: number }> = {};
+  
+  allEntries.forEach((e) => {
+    // FIX 1: Normalize e.date to YYYY-MM-DD so it matches dateKey exactly
+    const d = format(new Date(e.date), 'yyyy-MM-dd'); 
+    
+    if (!entryMap[d]) entryMap[d] = { sum: 0, count: 0 };
+    entryMap[d].sum += e.mood_value || getMoodValue(e.mood);
+    entryMap[d].count += 1;
+  });
 
-    const start =
-      viewMode === 'week'
-        ? startOfWeek(referenceDate)
-        : viewMode === 'year'
-          ? startOfYear(referenceDate)
-          : startOfMonth(referenceDate);
-    const end =
-      viewMode === 'week'
-        ? endOfWeek(referenceDate)
-        : viewMode === 'year'
-          ? endOfYear(referenceDate)
-          : endOfMonth(referenceDate);
+  const start =
+    viewMode === 'week' ? startOfWeek(referenceDate) : 
+    viewMode === 'year' ? startOfYear(referenceDate) : startOfMonth(referenceDate);
+  const end =
+    viewMode === 'week' ? endOfWeek(referenceDate) : 
+    viewMode === 'year' ? endOfYear(referenceDate) : endOfMonth(referenceDate);
 
-    const interval =
-      viewMode === 'year'
-        ? eachMonthOfInterval({ start, end })
-        : eachDayOfInterval({ start, end });
+  const interval =
+    viewMode === 'year' ? eachMonthOfInterval({ start, end }) : eachDayOfInterval({ start, end });
 
-    return interval.map((point) => {
-      const dateKey =
-        viewMode === 'year'
-          ? format(point, 'yyyy-MM')
-          : format(point, 'yyyy-MM-dd');
+  return interval.map((point) => {
+    const dateKey = viewMode === 'year' ? format(point, 'yyyy-MM') : format(point, 'yyyy-MM-dd');
 
-      if (viewMode === 'year') {
-        const monthEntries = Object.entries(entryMap).filter(([date]) =>
-          date.startsWith(dateKey),
-        );
-        const totalSum = monthEntries.reduce(
-          (acc, [_, val]) => acc + val.sum,
-          0,
-        );
-        const totalCount = monthEntries.reduce(
-          (acc, [_, val]) => acc + val.count,
-          0,
-        );
-        return {
-          label: format(point, 'MMM'),
-          mood: totalCount > 0 ? totalSum / totalCount : 0,
-        };
-      }
-
-      const stats = entryMap[dateKey] || { sum: 0, count: 0 };
+    if (viewMode === 'year') {
+      const monthEntries = Object.entries(entryMap).filter(([date]) => date.startsWith(dateKey));
+      const totalSum = monthEntries.reduce((acc, [_, val]) => acc + val.sum, 0);
+      const totalCount = monthEntries.reduce((acc, [_, val]) => acc + val.count, 0);
       return {
-        label: viewMode === 'month' ? format(point, 'd') : format(point, 'EEE'),
-        mood: stats.count > 0 ? stats.sum / stats.count : 0,
+        label: format(point, 'MMM'),
+        mood: totalCount > 0 ? totalSum / totalCount : 0,
+        count: totalCount, // Ensure count is passed for year view too
       };
-    });
-  }, [allEntries, viewMode, referenceDate]);
+    }
+
+    const stats = entryMap[dateKey] || { sum: 0, count: 0 };
+    return {
+      label: viewMode === 'month' ? format(point, 'd') : format(point, 'EEE'),
+      mood: stats.count > 0 ? stats.sum / stats.count : 0,
+      count: stats.count, // FIX 2: Explicitly return count so the Tooltip can see it
+    };
+  });
+}, [allEntries, viewMode, referenceDate]);
 
   if (loading)
     return (
@@ -264,74 +261,89 @@ export default function Statistics() {
         </div>
 
         {/* Line Chart */}
-        <div className='space-y-4'>
-          <h3 className='text-lg font-bold' style={{ color: COLORS.text }}>
-            Mood Trend
-          </h3>
-          <div className='bg-white rounded-3xl p-4 shadow-sm h-[250px]'>
-            <ResponsiveContainer width='100%' height='100%'>
-              <LineChart
-                data={trendData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-              >
-                <CartesianGrid
-                  strokeDasharray='3 3'
-                  vertical={false}
-                  stroke={COLORS.sage}
-                />
-                <XAxis
-                  dataKey='label'
-                  axisLine={{ stroke: COLORS.sage }}
-                  tick={{ fill: COLORS.text, fontSize: 12 }}
-                />
-                <YAxis
-                  domain={[0, 5]}
-                  ticks={[1, 2, 3, 4, 5]}
-                  axisLine={{ stroke: COLORS.sage }}
-                  tick={{ fill: COLORS.text, fontSize: 12 }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: '15px',
-                    border: 'none',
-                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                    padding: '12px',
-                  }}
-                  labelFormatter={(label) => `Day ${label}`}
-                  formatter={(value: number, name: any, props: any) => {
-                    const count = props.payload.count || 0;
-                    return [
-                      <div key='tooltip'>
-                        <div className='font-bold text-gray-800'>
-                          {getMoodLabel(value)}
-                        </div>
-                        <div className='text-xs text-gray-500'>
-                          {count} {count === 1 ? 'entry' : 'entries'}
-                        </div>
-                      </div>,
-                      null,
-                    ];
-                  }}
-                />
-                <Line
-                  type='monotone'
-                  dataKey='mood'
-                  stroke={COLORS.honeyGold}
-                  strokeWidth={4}
-                  // Changed: dot is now false, activeDot handles hover state
-                  dot={false}
-                  activeDot={{
-                    r: 6,
-                    fill: COLORS.honeyGold,
-                    stroke: '#fff',
-                    strokeWidth: 2,
-                  }}
-                  connectNulls
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        {/* Line Chart */}
+<div className='space-y-4'>
+  <div className='flex items-center justify-between'>
+    <h3 className='text-lg font-bold' style={{ color: COLORS.text }}>
+      {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}ly Mood Chart
+    </h3>
+    <div className='flex items-center gap-4'>
+      <button onClick={handlePrev} className='p-1 hover:bg-black/5 rounded-full transition-colors'>
+        <ChevronLeft size={20} color={COLORS.text} />
+      </button>
+      <span className='text-sm font-medium' style={{ color: COLORS.text }}>
+        {getRangeLabel()}
+      </span>
+      <button onClick={handleNext} className='p-1 hover:bg-black/5 rounded-full transition-colors'>
+        <ChevronRight size={20} color={COLORS.text} />
+      </button>
+    </div>
+  </div>
+
+  <div className='bg-white rounded-3xl p-4 shadow-sm h-[250px]'>
+    <ResponsiveContainer width='100%' height='100%'>
+      <LineChart
+        data={trendData}
+        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+      >
+        <CartesianGrid
+          strokeDasharray='3 3'
+          vertical={false}
+          stroke={COLORS.sage}
+        />
+        <XAxis
+          dataKey='label'
+          axisLine={{ stroke: COLORS.sage }}
+          tick={{ fill: COLORS.text, fontSize: 12 }}
+        />
+        <YAxis
+          domain={[0, 5]}
+          ticks={[1, 2, 3, 4, 5]}
+          axisLine={{ stroke: COLORS.sage }}
+          tick={{ fill: COLORS.text, fontSize: 12 }}
+        />
+        <Tooltip
+          contentStyle={{
+            borderRadius: '15px',
+            border: 'none',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+            padding: '12px',
+          }}
+          labelFormatter={(label) => `Day ${label}`}
+          formatter={(value: number, name: any, props: any) => {
+            const count = props.payload.count || 0;
+            return [
+              <div key='tooltip'>
+                <div className='font-bold text-gray-800'>
+                  {getMoodLabel(value)}
+                </div>
+                <div className='text-xs text-gray-500'>
+                  {count} {count === 1 ? 'entry' : 'entries'}
+                </div>
+              </div>,
+              null,
+            ];
+          }}
+        />
+        <Line
+          type='monotone'
+          dataKey='mood'
+          stroke={COLORS.honeyGold}
+          strokeWidth={4}
+          // Dot style matched to design
+          dot={{ r: 4, fill: COLORS.honeyGold, strokeWidth: 0 }}
+          activeDot={{
+            r: 6,
+            fill: COLORS.honeyGold,
+            stroke: '#fff',
+            strokeWidth: 2,
+          }}
+          connectNulls
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  </div>
+</div>
 
         {/* Bar Chart */}
         <div className='space-y-4'>
