@@ -1,61 +1,78 @@
 import React from 'react';
 
-// Precise percentage-based coordinates for the realistic silhouette
+// Refined SVG paths for soft, organic curves (based on your input image shape)
 const BODY_ZONES = [
-  { id: 'head', label: 'Head', top: '2%', left: '42%', width: '16%', height: '14%' },
-  { id: 'chest', label: 'Chest', top: '21%', left: '38%', width: '24%', height: '15%' },
-  { id: 'stomach', label: 'Stomach', top: '37%', left: '40%', width: '20%', height: '12%' },
-  { id: 'left-arm-upper', label: 'L Upper Arm', top: '22%', left: '28%', width: '9%', height: '18%' },
-  { id: 'right-arm-upper', label: 'R Upper Arm', top: '22%', left: '63%', width: '9%', height: '18%' },
-  { id: 'left-forearm', label: 'L Forearm', top: '41%', left: '23%', width: '8%', height: '15%' },
-  { id: 'right-forearm', label: 'R Forearm', top: '41%', left: '69%', width: '8%', height: '15%' },
-  { id: 'left-hand', label: 'L Hand', top: '57%', left: '19%', width: '10%', height: '10%' },
-  { id: 'right-hand', label: 'R Hand', top: '57%', left: '71%', width: '10%', height: '10%' },
-  { id: 'left-leg-upper', label: 'L Thigh', top: '55%', left: '36%', width: '13%', height: '20%' },
-  { id: 'right-leg-upper', label: 'R Thigh', top: '55%', left: '51%', width: '13%', height: '20%' },
-  { id: 'left-foot', label: 'L Foot', top: '90%', left: '37%', width: '10%', height: '8%' },
-  { id: 'right-foot', label: 'R Foot', top: '90%', left: '53%', width: '10%', height: '8%' },
+  // HEAD (Updated for curved jaw and skull)
+  // 'd' defines a rounded skull (arc 12,12) and tapering jawline (C commands)
+  { id: 'head', label: 'Head', d: 'M50,2c-6.6,0-12,5.4-12,12c0,3.3,1.3,6.3,3.5,8.5l0.5,0.5c0.6,0.6,1.4,1,2.3,1.3l2,0.8l0.7,2.2h6l0.7-2.2l2-0.8c0.9-0.3,1.7-0.7,2.3-1.3l0.5-0.5c2.2-2.2,3.5-5.2,3.5-8.5C62,7.4,56.6,2,50,2z' },
+  // NECK
+  { id: 'neck', label: 'Neck', d: 'M46,24h8l1,3h-10z' },
+  // TORSO
+  { id: 'chest', label: 'Chest', d: 'M35,28h30l2,10l-5,5H38l-5-5L35,28z' },
+  { id: 'stomach', label: 'Stomach', d: 'M37,44h26l-3,10H40L37,44z' },
+  // ARMS & HANDS (Aligned & separated)
+  { id: 'l_arm', label: 'L Arm', d: 'M33,29l-8,2l-5,20l5,2l8-18z' },
+  { id: 'r_arm', label: 'R Arm', d: 'M67,29l8,2l5,20l-5,2l-8-18z' },
+  { id: 'l_hand', label: 'L Hand', d: 'M20,49l-3,8l5,2l4-8z' }, 
+  { id: 'r_hand', label: 'R Hand', d: 'M80,49l3,8l-5,2l-4-8z' },
+  // LEGS & FEET (Aligned and curved)
+  { id: 'l_quad', label: 'L Quad', d: 'M38,56h11v20h-8L38,56z' },
+  { id: 'r_quad', label: 'R Quad', d: 'M51,56h11l-2,20h-9V56z' },
+  { id: 'l_calf', label: 'L Calf', d: 'M40,77h8v15h-8V77z' },
+  { id: 'r_calf', label: 'R Calf', d: 'M52,77h8v15h-8V77z' },
+  { id: 'l_foot', label: 'L Foot', d: 'M39,94h10l1,5h-11z' },
+  { id: 'r_foot', label: 'R Foot', d: 'M51,94h10l-1,5h-11z' },
 ];
 
 interface BodyMapProps {
-  onSelect: (part: string) => void;
+  onSelect: (partId: string) => void;
   selectedParts: string[];
 }
 
 export default function BodyMap({ onSelect, selectedParts }: BodyMapProps) {
   return (
-    <div className="relative w-full max-w-md mx-auto aspect-[2/3] bg-transparent">
-      {/* 1. The Realistic Base Image */}
-      <img 
-        src="/body-silhouette.jpg" 
-        alt="Realistic Body Map" 
-        className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-      />
+    <div className="flex flex-col items-center w-full max-w-sm mx-auto">
+      {/* 1. The SVG Silhouette Container */}
+      <div className="relative w-full aspect-[3/4] rounded-3xl p-6 shadow-xl border border-neutral-100 overflow-hidden">
+        
+        {/* 2. Interactive SVG Paths */}
+        <svg 
+          viewBox="0 0 100 100" 
+          className="w-full h-full drop-shadow-sm"
+        >
+          {BODY_ZONES.map((zone) => {
+            const isSelected = selectedParts.includes(zone.id);
+            
+            return (
+              <path
+                key={zone.id}
+                d={zone.d}
+                onClick={() => onSelect(zone.id)}
+                className={`transition-all duration-300 cursor-pointer stroke-[0.5]
+                  ${isSelected 
+                    ? 'fill-yellow-400 stroke-yellow-600 shadow-md' // Selected: Yellow/Gold glow
+                    : 'fill-neutral-50 stroke-neutral-200 hover:fill-neutral-100' // Smooth gray hover
+                  }`}
+              >
+                {/* Visual tooltip on hover */}
+                <title>{zone.label}</title>
+              </path>
+            );
+          })}
+        </svg>
 
-      {/* 2. Transparent Interaction Layer */}
-      <div className="absolute inset-0">
-        {BODY_ZONES.map((zone) => {
-          const isSelected = selectedParts.includes(zone.id);
-          return (
-            <button
-              key={zone.id}
-              onClick={() => onSelect(zone.id)}
-              title={zone.label}
-              className={`absolute transition-all duration-200 rounded-sm ${
-                isSelected 
-                  ? 'bg-blue-500/30 border-2 border-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.5)]' 
-                  : 'bg-transparent hover:bg-white/10'
-              }`}
-              style={{
-                top: zone.top,
-                left: zone.left,
-                width: zone.width,
-                height: zone.height,
-              }}
-            />
-          );
-        })}
+        {/* Selected Counter Overlay (Optional but professional) */}
+        {selectedParts.length > 0 && (
+          <div className="absolute top-4 right-4 bg-yellow-400 text-[10px] font-bold px-2 py-1 rounded-full text-yellow-900 animate-fade-in shadow-md">
+            {selectedParts.length}
+          </div>
+        )}
       </div>
+      
+      {/* Action Text */}
+      <p className="mt-4 text-[12px] text-neutral-400 italic">
+        {selectedParts.length > 0 ? "Selection Updated" : "Tap body parts to record sensations"}
+      </p>
     </div>
   );
 }

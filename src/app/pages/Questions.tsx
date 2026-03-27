@@ -159,21 +159,32 @@ export default function Questions() {
               selectedParts={selectedBodyParts}
             />
           </div>
-          <div className='min-h-[64px] flex flex-wrap gap-2 justify-center mt-4'>
-            {selectedBodyParts.map((part) => (
-              <span
-                key={part}
-                className='px-3 py-1 rounded-full text-xs font-bold border'
-                style={{
-                  backgroundColor: THEME.colors.primaryLight,
-                  color: THEME.colors.text,
-                  borderColor: THEME.colors.primary,
-                }}
-              >
-                {part}
-              </span>
-            ))}
-          </div>
+          <div className='min-h-[64px] flex flex-wrap gap-2 justify-center mt-4 px-4'>
+  {selectedBodyParts.map((part) => (
+    <span
+      key={part}
+      className='
+        /* Shape Controls */
+        min-w-[90px]               /* Forces the oblong shape even for short text */
+        h-[25px]                   /* Fixed height for consistent thickness */
+        px-4                       /* Horizontal padding for the pill stretch */
+        rounded-full               /* Creates the semicircular ends */
+        
+        /* Layout & Typography */
+        flex items-center justify-center
+        text-[12px] font-bold border
+        transition-all animate-in fade-in zoom-in duration-200
+      '
+      style={{
+        backgroundColor: THEME.colors.primaryLight,
+        color: THEME.colors.text,
+        borderColor: THEME.colors.primary,
+      }}
+    >
+      {part}
+    </span>
+  ))}
+</div>
         </div>
 
         <div className='px-6 pb-10 pt-4'>
