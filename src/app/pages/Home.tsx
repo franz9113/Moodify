@@ -6,6 +6,7 @@ import {
   Plus,
   Calendar,
   Sparkles,
+  Bell,
 } from 'lucide-react';
 import { supabase } from '@/app/utils/supabaseClient';
 import { getMoodColor, getMoodImage } from '@/app/utils/moodConfig';
@@ -171,9 +172,25 @@ export default function Home() {
       className='flex flex-col h-full pb-20'
       style={{ backgroundColor: THEME.colors.background }}
     >
-      <div className='px-6 flex justify-center bg-white shadow-sm'>
-        <img src={logoImage} alt='Moodify' className='h-24' />
-      </div>
+      <div className='px-6 py-2 flex items-center justify-between bg-white shadow-sm relative'>
+  {/* Empty div to balance the left side so logo stays centered */}
+  <div className="w-10" /> 
+
+  <img src={logoImage} alt='Moodify' className='h-24' />
+
+  {/* Notification Bell Container */}
+  <button 
+    className="relative p-2"
+    onClick={() => navigate('/app/notifications')}
+  >
+    <Bell size={24} style={{ color: THEME.colors.text }} />
+
+    <span className="absolute top-1 right-1 flex h-3 w-3">
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+    </span>
+  </button>
+</div>
 
       <div className='flex-1 overflow-y-auto'>
         {/* Date Selector (Top Strip) */}

@@ -13,6 +13,7 @@ import Tools from '@/app/pages/Tools';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword'; // 1. Add this import
 import RequestReset from './pages/RequestReset';
+import Notifications from './pages/Notifications';
 
 export const router = createBrowserRouter([
   // 1. PUBLIC AREA (No login required)
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
         element: <Root />,
         children: [
           { index: true, element: <Home /> },
+          { path: 'notifications', element: <Notifications /> },
           { path: 'mood-entry', element: <MoodEntry /> },
           { path: 'mood-selection', element: <MoodSelection /> },
           { path: 'questions', element: <Questions /> },

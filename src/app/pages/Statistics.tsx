@@ -329,9 +329,9 @@ export default function Statistics() {
           type='monotone'
           dataKey='mood'
           stroke={COLORS.honeyGold}
-          strokeWidth={4}
-          // Dot style matched to design
-          dot={{ r: 4, fill: COLORS.honeyGold, strokeWidth: 0 }}
+          strokeWidth={3}
+
+          dot={{ r: 0 }}
           activeDot={{
             r: 6,
             fill: COLORS.honeyGold,
