@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { BarChart3, Lightbulb, LogOut, X, Home } from 'lucide-react'; // 1. Added Home icon
 import { THEME } from '@/app/utils/theme';
@@ -8,6 +8,25 @@ export default function Root() {
   const location = useLocation();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [initializing, setInitializing] = useState(true); 
+
+useEffect(() => {
+  const checkUser = async () => {
+    // 1. Ask the browser: "Do we have a saved session?"
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session && location.pathname === '/') {
+      // 2. If YES, skip the landing page and go to the app
+      navigate('/app', { replace: true });
+    } else if (!session && location.pathname.startsWith('/app')) {
+      // 3. If NO, kick them back to landing if they try to sneak into /app
+      navigate('/', { replace: true });
+    }
+    setInitializing(false);
+  };
+
+  checkUser();
+}, [navigate, location.pathname]);
 
   // Updated to include both /app and /app/
   const isNavVisible = [

@@ -16,32 +16,21 @@ import RequestReset from './pages/RequestReset';
 import Notifications from './pages/Notifications';
 
 export const router = createBrowserRouter([
-  // 1. PUBLIC AREA (No login required)
   {
+    // 1. Root is now the "Shell" for the WHOLE app
     path: '/',
-    element: <Landing />,
-  },
-  {
-    path: '/login',
-    element: <Login />,
-  },
-  {
-    path: '/reset-password', // 2. Add this route for the email link
-    element: <ResetPassword />,
-  },
-  {
-  path: '/request-reset',
-  element: <RequestReset />,
-},
-
-  // 2. PRIVATE AREA (The Gatekeeper is here)
-  {
-    path: '/app', 
-    element: <ProtectedRoute />,
+    element: <Root />, 
     children: [
+      // PUBLIC ROUTES (Inside Root now)
+      { index: true, element: <Landing /> },
+      { path: 'login', element: <Login /> },
+      { path: 'reset-password', element: <ResetPassword /> },
+      { path: 'request-reset', element: <RequestReset /> },
+
+      // PRIVATE AREA
       {
-        path: '', 
-        element: <Root />,
+        path: 'app',
+        element: <ProtectedRoute />,
         children: [
           { index: true, element: <Home /> },
           { path: 'notifications', element: <Notifications /> },
@@ -57,7 +46,7 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // 3. SAFETY NET
+  // SAFETY NET
   {
     path: '*',
     element: <Navigate to='/' replace />,
