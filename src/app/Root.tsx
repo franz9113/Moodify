@@ -89,7 +89,7 @@ useEffect(() => {
         </div>
       )}
 
-      <div className='flex-1 overflow-y-auto pb-24'>
+      <div className='flex-1 overflow-y-auto'>
         <Outlet />
       </div>
 
