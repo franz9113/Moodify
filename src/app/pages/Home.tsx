@@ -145,23 +145,23 @@ export default function Home() {
       {
         Happy: {
           title: 'Keep the momentum going!',
-          description: 'Your positive energy is wonderful.',
+          description: 'Your positive energy is wonderful. Consider sharing your joy with someone or documenting what made you happy today.',
         },
         Sad: {
           title: "It's okay to feel sad",
-          description: 'Allow yourself to feel these emotions.',
+          description: 'Allow yourself to feel these emotions. Try reaching out to a friend or engaging in a comforting activity.',
         },
         Mad: {
           title: 'Channel your energy',
-          description: 'Anger is a valid emotion.',
+          description: 'Anger is a valid emotion. Consider physical activity or journaling to process these feelings constructively.',
         },
         Exhausted: {
           title: 'Rest and recharge',
-          description: 'Your body needs rest.',
+          description: 'Your body and mind need rest. Take time to restore your energy through rest and self-care.',
         },
         Calm: {
           title: 'Embrace this peace',
-          description: 'You found balance.',
+          description: 'You\'ve found a state of balance. Consider what helped you reach this point and how you can maintain it.',
         },
       };
     return suggestions[mood] || suggestions.Calm;

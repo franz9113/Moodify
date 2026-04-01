@@ -261,7 +261,6 @@ export default function Statistics() {
         </div>
 
         {/* Line Chart */}
-        {/* Line Chart */}
 <div className='space-y-4'>
   <div className='flex items-center justify-between'>
     <h3 className='text-lg font-bold' style={{ color: COLORS.text }}>
