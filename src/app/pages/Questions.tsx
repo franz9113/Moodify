@@ -3,38 +3,7 @@ import { useNavigate, useLocation } from 'react-router';
 import { X, ChevronRight, Loader2 } from 'lucide-react';
 import { THEME } from '../utils/theme';
 import BodyMap from '@/app/components/custom/BodyMap';
-
-const questions = [
-  {
-    id: 'whatMadeYouFeel',
-    question: 'What made you feel this way?',
-    options: [
-      'Work/School',
-      'Relationships',
-      'Health',
-      'Financial concerns',
-      'Personal achievements',
-      'Other',
-    ],
-  },
-  {
-    id: 'whatDidYouDo',
-    question: 'What did you do in response to that emotion?',
-    options: [
-      'Talked to someone',
-      'Exercised',
-      'Took a break',
-      'Wrote about it',
-      'Did nothing',
-      'Other',
-    ],
-  },
-  {
-    id: 'was_it_right',
-    question: 'Did you think what you were feeling was right?',
-    options: ['Yes', 'No', 'Not sure'],
-  },
-];
+import { QUESTIONS } from '@/app/utils/moodConfig';
 
 export default function Questions() {
   const navigate = useNavigate();
@@ -54,7 +23,7 @@ export default function Questions() {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const currentQuestion = questions[currentQuestionIndex];
+  const currentQuestion = QUESTIONS[currentQuestionIndex];
 
   const handleAnswer = (answer: string) => {
     if (!currentQuestion) return;
@@ -67,7 +36,7 @@ export default function Questions() {
     const newAnswers = { ...answers, [currentQuestion.id]: answer };
     setAnswers(newAnswers);
 
-    if (currentQuestionIndex < questions.length - 1) {
+    if (currentQuestionIndex < QUESTIONS.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setShowCustomInput(false);
       setCustomAnswer('');
@@ -82,7 +51,7 @@ export default function Questions() {
     const newAnswers = { ...answers, [currentQuestion.id]: customAnswer };
     setAnswers(newAnswers);
 
-    if (currentQuestionIndex < questions.length - 1) {
+    if (currentQuestionIndex < QUESTIONS.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setShowCustomInput(false);
       setCustomAnswer('');
@@ -217,7 +186,7 @@ export default function Questions() {
         style={{ borderColor: THEME.colors.neutral }}
       >
         <h1 className='text-xl font-bold'>
-          {editId ? 'Edit Entry' : `Question ${currentQuestionIndex + 1} of 3`}
+          {editId ? 'Edit Entry' : `Question ${currentQuestionIndex + 1} of ${QUESTIONS.length}`}
         </h1>
         <button onClick={() => navigate('/app')} className='p-2'>
           <X size={24} />

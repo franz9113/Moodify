@@ -4,6 +4,100 @@ import exhaustedImg from '@/assets/6263d015ac38c48ef1975b353a514eadf070dce0.png'
 import madImg from '@/assets/51a2d60599bb8d0a17c771eafbef67b6297d9869.png';
 import sadImg from '@/assets/8d26e77f44ccb6deffe10ee1f8a7a098275a4cdd.png';
 
+
+// Suggestions.tsx imports
+export type MoodKey = 'Happy' | 'Mad' | 'Sad' | 'Calm' | 'Exhausted';
+
+export const MOOD_CONTENT: Record<MoodKey, { title: string; descriptions: string[] }> = {
+  Happy: {
+    title: "Keep the momentum going!",
+    descriptions: ["Your positive energy is wonderful. Consider sharing your joy with someone or documenting what made you happy today."],
+  },
+  Mad: {
+    title: "It's like a storm, isn't it?",
+    descriptions: [
+      "Don't hold onto your anger for too long. Take a walk and find your inner peace.",
+      "It's always a good thing to count slowly from 1-10 before reacting.",
+      "Take a breather. Consider listening to music that calms you down.",
+    ],
+  },
+  Sad: {
+    title: "Everything is okay",
+    descriptions: [
+      "Don't let it bring you down. Try talking to someone you trust that could make you feel better.",
+      "Your feelings are valid, and it's okay to feel this way. If you want a distraction, consider doing what you love.",
+      "It's okay, don't keep it in. Journaling will help you express your feelings.",
+    ],
+  },
+  Calm: {
+    title: "Peace feels good, doesn’t it?",
+    descriptions: [
+      "A peaceful mind helps you make better choices.",
+      "Stay present and grounded. You’re exactly where you need to be.",
+      "Take this moment to appreciate the stillness and clarity you feel.",
+    ],
+  },
+  Exhausted: {
+    title: "It’s okay to just pause for a bit!",
+    descriptions: [
+      "Everything's gonna be fine! Put all the worries down and try doing something you love!",
+      "It's okay to take a rest, a short nap might help!",
+      "Take it slow, a little breather or rest could make you feel better.",
+    ],
+  },
+};
+
+export const MOOD_TOOLS: Record<MoodKey, string> = {
+  Happy: 'Gratitude Journal',
+  Calm: 'Mindfulness Meditation',
+  Exhausted: 'Relaxation Techniques',
+  Mad: 'Progressive Muscle Relaxation',
+  Sad: 'Deep Breathing Exercise',
+};
+
+// end of Suggestions.tsx
+
+// questions.tsx imports
+
+export interface Question {
+  id: 'whatMadeYouFeel' | 'whatDidYouDo' | 'was_it_right';
+  question: string;
+  options: string[];
+}
+
+export const QUESTIONS: Question[] = [
+  {
+    id: 'whatMadeYouFeel',
+    question: 'What made you feel this way?',
+    options: [
+      'Work/School',
+      'Relationships',
+      'Health',
+      'Financial concerns',
+      'Personal achievements',
+      'Other',
+    ],
+  },
+  {
+    id: 'whatDidYouDo',
+    question: 'What did you do in response to that emotion?',
+    options: [
+      'Talked to someone',
+      'Exercised',
+      'Took a break',
+      'Wrote about it',
+      'Did nothing',
+      'Other',
+    ],
+  },
+  {
+    id: 'was_it_right',
+    question: 'Did you think what you were feeling was right?',
+    options: ['Yes', 'No', 'Not sure'],
+  },
+];
+// questions.tsx imports end
+
 export const MOOD_CONFIG = {
   Happy: {
     name: 'Happy',

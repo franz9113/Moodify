@@ -173,7 +173,6 @@ export default function Home() {
       style={{ backgroundColor: THEME.colors.background }}
     >
       <div className='px-6 py-2 flex items-center justify-between bg-white shadow-sm relative'>
-  {/* Empty div to balance the left side so logo stays centered */}
   <div className="w-10" /> 
 
   <img src={logoImage} alt='Moodify' className='h-24' />

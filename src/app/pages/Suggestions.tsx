@@ -3,55 +3,7 @@ import { useNavigate } from 'react-router';
 import { CheckCircle2, Sparkles, Loader2 } from 'lucide-react';
 import { supabase } from '@/app/utils/supabaseClient';
 import { THEME } from '@/app/utils/theme';
-
-type MoodKey = 'Happy' | 'Mad' | 'Sad' | 'Calm' | 'Exhausted';
-
-const MOOD_CONTENT: Record<MoodKey, { title: string; descriptions: string[] }> = {
-  Happy: {
-    title: "Keep the momentum going!",
-    descriptions: ["Your positive energy is wonderful. Consider sharing your joy with someone or documenting what made you happy today."],
-  },
-  Mad: {
-    title: "It's like a storm, isn't it?",
-    descriptions: [
-      "Don't hold onto your anger for too long. Take a walk and find your inner peace.",
-      "It's always a good thing to count slowly from 1-10 before reacting.",
-      "Take a breather. Consider listening to music that calms you down.",
-    ],
-  },
-  Sad: {
-    title: "Everything is okay",
-    descriptions: [
-      "Don't let it bring you down. Try talking to someone you trust that could make you feel better.",
-      "Your feelings are valid, and it's okay to feel this way. If you want a distraction, consider doing what you love.",
-      "It's okay, don't keep it in. Journaling will help you express your feelings.",
-    ],
-  },
-  Calm: {
-    title: "Peace feels good, doesn’t it?",
-    descriptions: [
-      "A peaceful mind helps you make better choices.",
-      "Stay present and grounded. You’re exactly where you need to be.",
-      "Take this moment to appreciate the stillness and clarity you feel.",
-    ],
-  },
-  Exhausted: {
-    title: "It’s okay to just pause for a bit!",
-    descriptions: [
-      "Everything's gonna be fine! Put all the worries down and try doing something you love!",
-      "It's okay to take a rest, a short nap might help!",
-      "Take it slow, a little breather or rest could make you feel better.",
-    ],
-  },
-};
-
-const MOOD_TOOLS: Record<MoodKey, string> = {
-  Happy: 'Gratitude Journal',
-  Calm: 'Mindfulness Meditation',
-  Exhausted: 'Relaxation Techniques',
-  Mad: 'Progressive Muscle Relaxation',
-  Sad: 'Deep Breathing Exercise',
-};
+import { MOOD_CONTENT, MOOD_TOOLS, type MoodKey } from '@/app/utils/moodConfig';
 
 export default function Suggestions() {
   const navigate = useNavigate();
