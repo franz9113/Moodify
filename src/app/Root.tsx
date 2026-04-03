@@ -106,7 +106,7 @@ useEffect(() => {
               <span className='text-[10px] font-bold uppercase'>Stats</span>
             </button>
 
-            {/* 🏠 HOME (The missing button) */}
+            {/* 🏠 HOME */}
             <button
               onClick={() => navigate('/app')}
               className='flex-1 flex flex-col items-center gap-1 transition-colors'

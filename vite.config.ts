@@ -7,11 +7,11 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss(), // This prevents the "Giant Mo" issue
+    tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true, // This is the fix! It forces the manifest to generate on localhost
+        enabled: true, 
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
@@ -24,12 +24,12 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'moodify-192x192.png', // I saw these names in your sidebar!
+            src: 'APP_ICON_1_192x192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: 'moodify-512x512.png',
+            src: 'APP_ICON_1_512x512.png',
             sizes: '512x512',
             type: 'image/png',
           },
