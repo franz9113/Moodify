@@ -13,21 +13,17 @@ export default function Suggestions() {
   const [randomDescription, setRandomDescription] = useState(""); 
   const saveAttempted = useRef(false);
 
-useEffect(() => {
+  useEffect(() => {
     const savedData = localStorage.getItem('currentMoodEntry');
     if (savedData && !saveAttempted.current) {
       saveAttempted.current = true;
       const parsed = JSON.parse(savedData);
       setEntry(parsed);
 
-      // 1. Identify the mood safely
       const moodKey = (parsed.mood in MOOD_CONTENT ? parsed.mood : 'Happy') as MoodKey;
       const content = MOOD_CONTENT[moodKey];
       
-      // 2. Pick random index
       const randomIndex = Math.floor(Math.random() * content.descriptions.length);
-      
-      // 3. THE FIX: Use 'as string' or a hard fallback string to satisfy the compiler
       const selectedDesc = content.descriptions[randomIndex] || content.descriptions[0] || "Take a moment for yourself.";
       setRandomDescription(selectedDesc);
 
@@ -54,7 +50,9 @@ useEffect(() => {
         body_parts: data.bodyParts || [],
         trigger: data.whatMadeYouFeel || data.trigger || '',
         action: data.whatDidYouDo || data.action || '',
-        was_it_right: data.was_it_right ?? true,
+        was_it_right: data.was_it_right ?? 'Not sure',
+        notice_emotions: data.notice_emotions || '', 
+        affect_decisions: data.affect_decisions || '',
         journal: data.journalText || data.journal || '',
       };
 
@@ -153,6 +151,34 @@ useEffect(() => {
               <div>
                 <p className='text-[10px] font-black opacity-30 uppercase tracking-widest mb-1'>What made you feel this way</p>
                 <p className='font-black text-sm' style={{ color: THEME.colors.text }}>{entry.whatMadeYouFeel}</p>
+              </div>
+            )}
+            {entry.was_it_right !== undefined && (
+              <div>
+                <p className='text-[10px] font-black opacity-30 uppercase tracking-widest mb-1'>
+                  Was it the right response?
+                </p>
+                <p className='font-black text-sm' style={{ color: THEME.colors.text }}>
+                  {entry.was_it_right === true || entry.was_it_right === 'true' || entry.was_it_right === 'Yes' 
+                    ? 'Yes' 
+                    : entry.was_it_right === false || entry.was_it_right === 'false' || entry.was_it_right === 'No'
+                    ? 'No'
+                    : 'Not sure'}
+                </p>
+              </div>
+            )}
+
+            {entry.notice_emotions && (
+              <div>
+                <p className='text-[10px] font-black opacity-30 uppercase tracking-widest mb-1'>Noticed Emotions</p>
+                <p className='font-black text-sm' style={{ color: THEME.colors.text }}>{entry.notice_emotions}</p>
+              </div>
+            )}
+
+            {entry.affect_decisions && (
+              <div>
+                <p className='text-[10px] font-black opacity-30 uppercase tracking-widest mb-1'>Affected Decisions</p>
+                <p className='font-black text-sm' style={{ color: THEME.colors.text }}>{entry.affect_decisions}</p>
               </div>
             )}
 

@@ -60,7 +60,7 @@ export const MOOD_TOOLS: Record<MoodKey, string> = {
 // questions.tsx imports
 
 export interface Question {
-  id: 'whatMadeYouFeel' | 'whatDidYouDo' | 'was_it_right';
+  id: 'whatMadeYouFeel' | 'whatDidYouDo' | 'was_it_right' | 'notice_emotions' | 'affect_decisions';
   question: string;
   options: string[];
 }
@@ -94,6 +94,16 @@ export const QUESTIONS: Question[] = [
     id: 'was_it_right',
     question: 'Did you think what you were feeling was right?',
     options: ['Yes', 'No', 'Not sure'],
+  },
+  {
+    id: 'notice_emotions',
+    question: 'Do you notice your emotions as they happen?',
+    options: ['Yes', 'No', 'Maybe']
+  },
+  {
+    id: 'affect_decisions',
+    question: 'Did your feelings affect your ability to make decisions?',
+    options: ['Yes', 'No', 'Maybe']
   },
 ];
 // questions.tsx imports end
