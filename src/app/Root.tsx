@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
-import { BarChart3, Lightbulb, LogOut, X, Home } from 'lucide-react'; // 1. Added Home icon
+import { BarChart3, Lightbulb, LogOut, Home } from 'lucide-react';
 import { THEME } from '@/app/utils/theme';
 import { supabase } from '@/app/utils/supabaseClient';
+import LogoutConfirmDialog from '@/app/components/LogoutConfirmDialog';
 
 export default function Root() {
   const location = useLocation();
@@ -55,39 +56,11 @@ useEffect(() => {
 
   return (
     <div className='h-screen w-full max-w-md mx-auto bg-white flex flex-col relative overflow-hidden'>
-      {/* LOGOUT MODAL */}
-      {showLogoutConfirm && (
-        <div className='absolute inset-0 z-[100] flex items-end justify-center px-6 pb-20 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200'>
-          <div className='w-full bg-white rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom-10 duration-300'>
-            <div className='flex justify-between items-center mb-4'>
-              <h3 className='text-xl font-bold text-gray-800'>Exit Moodify?</h3>
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className='p-1 opacity-40'
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <p className='text-gray-500 mb-8'>
-              Are you sure you want to log out of your journey?
-            </p>
-            <div className='flex flex-col gap-3'>
-              <button
-                onClick={handleLogout}
-                className='w-full py-4 bg-red-500 text-white font-bold rounded-2xl active:scale-95 transition-transform'
-              >
-                Log Out
-              </button>
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className='w-full py-4 bg-gray-50 text-gray-500 font-bold rounded-2xl active:scale-95 transition-transform'
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <LogoutConfirmDialog
+        isOpen={showLogoutConfirm}
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
 
       <div className='flex-1 overflow-y-auto'>
         <Outlet />

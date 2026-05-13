@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { X, Sparkles, Trash2, Edit2, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
+import { X, BookOpen } from 'lucide-react';
 import { getMoodImage, MOOD_TOOLS, type MoodKey } from '@/app/utils/moodConfig';
 import { THEME } from '@/app/utils/theme';
 import { CustomButton } from '@/app/components/custom/CustomComponents';
-import { supabase } from '@/app/utils/supabaseClient';
+import { deleteMoodEntry, mapEntryForEdit } from '@/app/utils/entryUtils';
+import EntryFields from '@/app/components/MoodEntry/EntryFields';
+import ToolRecommendation from '@/app/components/MoodEntry/ToolRecommendation';
+import EntryActions from '@/app/components/MoodEntry/EntryActions';
 
 export default function MoodEntry() {
   const navigate = useNavigate();
@@ -23,23 +26,7 @@ export default function MoodEntry() {
     if (!entry) return;
 
     navigate('/app/questions', {
-      state: {
-        editId: entry.id,
-        moodType: entry.mood,
-        moodSubtype: entry.emotion,
-        existingAnswers: {
-          // KEY-VALUE MAPPING MUST MATCH Question IDs exactly
-          whatMadeYouFeel: entry.trigger,    
-          whatDidYouDo: entry.action,       
-          was_it_right: entry.was_it_right, 
-          notice_emotions: entry.notice_emotions,
-          affect_decisions: entry.affect_decisions,
-        },
-        existingBodyParts: entry.body_parts || [],
-        selectedDate: entry.date,
-        existingJournal: entry.journal,
-        moodValue: entry.mood_value
-      },
+      state: mapEntryForEdit(entry),
     });
   };
 
@@ -49,8 +36,7 @@ export default function MoodEntry() {
 
     try {
       setIsDeleting(true);
-      const { error } = await supabase.from('mood_entries').delete().eq('id', entry.id);
-      if (error) throw error;
+      await deleteMoodEntry(entry.id);
       localStorage.removeItem('viewMoodEntry');
       navigate('/app');
     } catch (err: any) {
@@ -108,39 +94,15 @@ export default function MoodEntry() {
               </div>
             )}
 
-            <div className='grid grid-cols-1 gap-4'>
-              {[
-                { label: 'The Trigger', value: entry.trigger },
-                { label: 'Your Response', value: entry.action },
-                { label: 'Was it right?', value: entry.was_it_right },
-                { label: 'Noticed Emotions', value: entry.notice_emotions },
-                { label: 'Affected Decisions', value: entry.affect_decisions },
-              ].map((item, index) => item.value && (
-                <div key={index} className='bg-white rounded-2xl p-5 border-2 shadow-sm' style={{ borderColor: THEME.colors.neutral }}>
-                  <p className='text-[10px] font-black uppercase tracking-widest mb-1 opacity-40'>{item.label}</p>
-                  <p className='font-bold text-base leading-tight'>{item.value}</p>
-                </div>
-              ))}
-            </div>
+            <EntryFields entry={entry} />
 
-            <div className='rounded-2xl p-6 border-2 shadow-md flex items-start gap-4'
-              style={{ backgroundColor: `${THEME.colors.primary}20`, borderColor: THEME.colors.primary }}>
-              <Sparkles className='mt-1' style={{ color: THEME.colors.text }} />
-              <div>
-                <p className='text-[10px] font-black uppercase opacity-60 mb-1'>Recommended tool</p>
-                <p className='text-lg font-black leading-tight'>{recommendedTool}</p>
-              </div>
-            </div>
+            <ToolRecommendation toolName={recommendedTool} />
 
-            <div className='pt-6 space-y-3'>
-              <button onClick={handleEdit} className='w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-2 border-2 shadow-lg bg-white'
-                style={{ borderColor: THEME.colors.primary, color: THEME.colors.text }}>
-                <Edit2 size={18} /> Edit This Entry
-              </button>
-              <button onClick={handleDelete} disabled={isDeleting} className='w-full py-4 flex items-center justify-center gap-2 text-red-500 font-bold text-sm disabled:opacity-50'>
-                <Trash2 size={18} /> {isDeleting ? 'Deleting...' : 'Delete Entry'}
-              </button>
-            </div>
+            <EntryActions
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              isDeleting={isDeleting}
+            />
           </div>
         </div>
       </div>

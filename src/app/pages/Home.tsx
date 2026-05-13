@@ -1,67 +1,22 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Calendar,
-  Sparkles,
-  Bell,
-} from 'lucide-react';
+import { Plus, Bell } from 'lucide-react';
 import { supabase } from '@/app/utils/supabaseClient';
-import { getMoodColor, getMoodImage } from '@/app/utils/moodConfig';
+import { getMoodImage } from '@/app/utils/moodConfig';
+import { calculateOverallMoodName, getSuggestionsForMood } from '@/app/utils/moodCalculations';
 import { THEME } from '@/app/utils/theme';
 import { CustomButton } from '@/app/components/custom/CustomComponents';
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  isSameMonth,
-  isSameDay,
-  addMonths,
-  subMonths,
-  startOfWeek,
-  addDays,
-} from 'date-fns';
+import HomeCalendar from '@/app/components/Home/HomeCalendar';
+import MoodSuggestion from '@/app/components/Home/MoodSuggestion';
+import { format } from 'date-fns';
 import logoImage from '@/assets/dea20f2c36e47fcd5e92a36dccb36262d7f3d9e8.png';
-
-// Mood Weight Configuration
-const MOOD_WEIGHTS: Record<string, number> = {
-  Happy: 5,
-  Calm: 4,
-  Exhausted: 2.5,
-  Sad: 2,
-  Mad: 1,
-};
-
-// Helper to calculate mood name from a list of entries
-const calculateOverallMoodName = (entries: any[]) => {
-  if (!entries || entries.length === 0) return null;
-
-  const totalScore = entries.reduce((sum, entry) => {
-    return sum + (MOOD_WEIGHTS[entry.mood] || 3);
-  }, 0);
-
-  const averageScore = totalScore / entries.length;
-
-  if (averageScore >= 4.5) return 'Happy';
-  if (averageScore >= 3.5) return 'Calm';
-  if (averageScore >= 2.2) return 'Exhausted'; // Adjusted threshold for Exhausted
-  if (averageScore >= 1.5) return 'Sad';
-  return 'Mad';
-};
 
 export default function Home() {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showFullCalendar, setShowFullCalendar] = useState(false);
   const [showOverallSuggestions, setShowOverallSuggestions] = useState(false);
-
-  const [entriesForSelectedDate, setEntriesForSelectedDate] = useState<any[]>(
-    [],
-  );
+  const [entriesForSelectedDate, setEntriesForSelectedDate] = useState<any[]>([]);
   const [allMoodsMap, setAllMoodsMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
@@ -124,48 +79,7 @@ export default function Home() {
     [entriesForSelectedDate],
   );
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-  const startDayOfWeek = monthStart.getDay();
-  const emptyDays = Array(startDayOfWeek).fill(null);
-  const weekStart = startOfWeek(selectedDate);
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  const getDayMoodColor = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const moodType = allMoodsMap[dateStr];
-    return moodType ? getMoodColor(moodType) : 'bg-gray-100';
-  };
-
-  const getSuggestionsForMood = (mood: string | null) => {
-    if (!mood)
-      return { title: 'No entries', description: 'Log your first mood!' };
-    const suggestions: Record<string, { title: string; description: string }> =
-      {
-        Happy: {
-          title: 'Keep the momentum going!',
-          description: 'Your positive energy is wonderful. Consider sharing your joy with someone or documenting what made you happy today.',
-        },
-        Sad: {
-          title: "It's okay to feel sad",
-          description: 'Allow yourself to feel these emotions. Try reaching out to a friend or engaging in a comforting activity.',
-        },
-        Mad: {
-          title: 'Channel your energy',
-          description: 'Anger is a valid emotion. Consider physical activity or journaling to process these feelings constructively.',
-        },
-        Exhausted: {
-          title: 'Rest and recharge',
-          description: 'Your body and mind need rest. Take time to restore your energy through rest and self-care.',
-        },
-        Calm: {
-          title: 'Embrace this peace',
-          description: 'You\'ve found a state of balance. Consider what helped you reach this point and how you can maintain it.',
-        },
-      };
-    return suggestions[mood] || suggestions.Calm;
-  };
 
   return (
     <div
@@ -192,82 +106,13 @@ export default function Home() {
 </div>
 
       <div className='flex-1 overflow-y-auto'>
-        {/* Date Selector (Top Strip) */}
-        <div className='p-4'>
-          <div className='flex items-center gap-2'>
-            <CustomButton
-              variant={showFullCalendar ? 'primary' : 'outline'}
-              fullWidth={false}
-              onClick={() => setShowFullCalendar(!showFullCalendar)}
-              className='w-12 h-12 p-0'
-            >
-              <Calendar size={15} />
-            </CustomButton>
-
-            <div className='flex-1 grid grid-cols-7 gap-2'>
-              {weekDays.map((day) => (
-                <button
-                  key={day.toISOString()}
-                  onClick={() => setSelectedDate(day)}
-                  className='relative flex flex-col items-center'
-                >
-                  <span
-                    className='text-xs mb-1'
-                    style={{ color: THEME.colors.text }}
-                  >
-                    {format(day, 'EEE').charAt(0)}
-                  </span>
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm transition-all ${getDayMoodColor(day)} ${isSameDay(day, selectedDate) ? 'ring-2 ring-[#F5CB5C] scale-110' : ''}`}
-                  >
-                    {format(day, 'd')}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Full Month Calendar View */}
-        {showFullCalendar && (
-          <div className='px-6 py-4 border-t border-gray-200 bg-white shadow-inner'>
-            <div className='flex items-center justify-between mb-4'>
-              <button
-                onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-              >
-                <ChevronLeft />
-              </button>
-              <h2
-                className='text-lg font-bold'
-                style={{ color: THEME.colors.text }}
-              >
-                {format(currentMonth, 'MMMM yyyy')}
-              </h2>
-              <button
-                onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-              >
-                <ChevronRight />
-              </button>
-            </div>
-            <div className='grid grid-cols-7 gap-1'>
-              {emptyDays.map((_, i) => (
-                <div key={i} />
-              ))}
-              {daysInMonth.map((day) => (
-                <button
-                  key={day.toISOString()}
-                  onClick={() => {
-                    setSelectedDate(day);
-                    setShowFullCalendar(false);
-                  }}
-                  className={`aspect-square rounded-lg flex items-center justify-center text-sm ${getDayMoodColor(day)} ${isSameDay(day, selectedDate) ? 'ring-2 ring-[#F5CB5C]' : ''} ${!isSameMonth(day, currentMonth) ? 'opacity-30' : ''}`}
-                >
-                  {format(day, 'd')}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <HomeCalendar
+          currentMonth={currentMonth}
+          selectedDate={selectedDate}
+          allMoodsMap={allMoodsMap}
+          onMonthChange={setCurrentMonth}
+          onDateSelect={setSelectedDate}
+        />
 
         <div className='px-6 py-4'>
           <h3
@@ -287,57 +132,12 @@ export default function Home() {
           ) : (
             <>
               {overallMood && (
-                <div className='mb-6'>
-                  <button
-                    onClick={() =>
-                      setShowOverallSuggestions(!showOverallSuggestions)
-                    }
-                    className={`w-full rounded-3xl p-6 flex flex-col items-center gap-3 transition-all shadow-sm border-2 ${getMoodColor(overallMood)}`}
-                    style={{ borderColor: THEME.colors.primary }}
-                  >
-                    <p className='text-sm' style={{ color: THEME.colors.text }}>
-                      Your overall mood is{' '}
-                      <span className='font-bold'>{overallMood}</span>
-                    </p>
-                    <img
-                      src={getMoodImage(overallMood)}
-                      alt={overallMood}
-                      className='w-24 h-24'
-                    />
-                  </button>
-
-                  {showOverallSuggestions && (
-                    <div
-                      className='mt-3 bg-white border-2 rounded-2xl p-4 shadow-lg animate-in zoom-in-95'
-                      style={{ borderColor: THEME.colors.primary }}
-                    >
-                      <div className='flex items-center gap-2 mb-2'>
-                        <Sparkles
-                          size={20}
-                          style={{ color: THEME.colors.primary }}
-                        />
-                        <h4
-                          className='font-bold'
-                          style={{ color: THEME.colors.text }}
-                        >
-                          Mood Regulation
-                        </h4>
-                      </div>
-                      <h5
-                        className='font-bold'
-                        style={{ color: THEME.colors.text }}
-                      >
-                        {getSuggestionsForMood(overallMood)?.title}
-                      </h5>
-                      <p
-                        className='text-sm'
-                        style={{ color: THEME.colors.text }}
-                      >
-                        {getSuggestionsForMood(overallMood)?.description}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                <MoodSuggestion
+                  mood={overallMood}
+                  isExpanded={showOverallSuggestions}
+                  onToggle={() => setShowOverallSuggestions(!showOverallSuggestions)}
+                  suggestion={getSuggestionsForMood(overallMood)}
+                />
               )}
 
               <div className='space-y-4'>

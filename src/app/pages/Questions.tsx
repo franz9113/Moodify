@@ -1,66 +1,28 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
-import { X, ChevronRight, Loader2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import { THEME } from '../utils/theme';
-import BodyMap from '@/app/components/custom/BodyMap';
 import { QUESTIONS } from '@/app/utils/moodConfig';
+import { useQuestionnaire } from '@/app/hooks/useQuestionnaire';
+import QuestionCard from '@/app/components/Questions/QuestionCard';
+import BodyMapPage from '@/app/components/Questions/BodyMapPage';
 
 export default function Questions() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const editId = state?.editId;
 
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>(
-    state?.existingAnswers || {},
-  );
   const [selectedBodyParts, setSelectedBodyParts] = useState<string[]>(
     state?.existingBodyParts || [],
   );
-
   const [showBodyMap, setShowBodyMap] = useState(false);
-  const [customAnswer, setCustomAnswer] = useState('');
-  const [showCustomInput, setShowCustomInput] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const currentQuestion = QUESTIONS[currentQuestionIndex];
-  const isOptionSelected = (option: string) => {
-    if (!currentQuestion) return false;
-    const savedAnswer = answers[currentQuestion.id];
-    if (savedAnswer === undefined || savedAnswer === null) return false;
-    return savedAnswer.toString().toLowerCase() === option.toLowerCase();
-  };
+  const questionnaire = useQuestionnaire(state?.existingAnswers || {});
+  const { currentQuestion, currentQuestionIndex, answers } = questionnaire;
 
-  const handleAnswer = (answer: string) => {
-    if (!currentQuestion) return;
-
-    if (answer === 'Other') {
-      setShowCustomInput(true);
-      return;
-    }
-
-    const newAnswers = { ...answers, [currentQuestion.id]: answer };
-    setAnswers(newAnswers);
-
-    if (currentQuestionIndex < QUESTIONS.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setShowCustomInput(false);
-      setCustomAnswer('');
-    } else {
-      setShowBodyMap(true);
-    }
-  };
-
-  const handleCustomSubmit = () => {
-    if (!currentQuestion || !customAnswer.trim()) return;
-    const newAnswers = { ...answers, [currentQuestion.id]: customAnswer };
-    setAnswers(newAnswers);
-
-    if (currentQuestionIndex < QUESTIONS.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setShowCustomInput(false);
-      setCustomAnswer('');
-    } else {
+  const handleQuestionAnswered = (complete: boolean) => {
+    if (complete) {
       setShowBodyMap(true);
     }
   };
@@ -82,7 +44,7 @@ export default function Questions() {
         whatMadeYouFeel: answers.whatMadeYouFeel || '',
         whatDidYouDo: answers.whatDidYouDo || '',
         was_it_right: answers.was_it_right || 'Not sure',
-        notice_emotions: answers.notice_emotions || '', 
+        notice_emotions: answers.notice_emotions || '',
         affect_decisions: answers.affect_decisions || '',
         bodyParts: selectedBodyParts || [],
         date: savedDate,
@@ -102,72 +64,59 @@ export default function Questions() {
 
   if (showBodyMap) {
     return (
-      <div className='flex flex-col min-h-[100dvh]' style={{ backgroundColor: THEME.colors.background }}>
-        <div className='px-6 py-4 flex items-center justify-between border-b' style={{ borderColor: THEME.colors.neutral }}>
-          <h1 className='text-lg font-bold'>Focus on where your body is reacting</h1>
-          <button onClick={() => navigate('/app')} className='p-2'><X size={24} /></button>
-        </div>
-        <div className='flex-1 flex flex-col px-6 py-8 overflow-hidden'>
-          <div className='flex-1 flex items-center justify-center py-4'>
-            <BodyMap
-              onSelect={(part) => setSelectedBodyParts((prev) => prev.includes(part) ? prev.filter((p) => p !== part) : [...prev, part])}
-              selectedParts={selectedBodyParts}
-            />
-          </div>
-          <div className='min-h-[64px] flex flex-wrap gap-2 justify-center mt-4 px-4'>
-            {selectedBodyParts.map((part) => (
-              <span key={part} className='min-w-[90px] h-[25px] px-4 rounded-full flex items-center justify-center text-[12px] font-bold border'
-                style={{ backgroundColor: THEME.colors.primaryLight, color: THEME.colors.text, borderColor: THEME.colors.primary }}>
-                {part}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className='px-6 pb-10 pt-4'>
-          <button disabled={loading} onClick={handleFinalSubmit} className='w-full py-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 transition-all'
-            style={{ backgroundColor: loading ? THEME.colors.neutral : THEME.colors.primary, color: THEME.colors.text }}>
-            {loading && <Loader2 className='animate-spin' size={20} />}
-            <span>Continue to Journal</span>
-          </button>
-        </div>
-      </div>
+      <BodyMapPage
+        selectedBodyParts={selectedBodyParts}
+        onSelectBodyPart={(part) =>
+          setSelectedBodyParts((prev) =>
+            prev.includes(part)
+              ? prev.filter((p) => p !== part)
+              : [...prev, part],
+          )
+        }
+        onSubmit={handleFinalSubmit}
+        onClose={() => navigate('/app')}
+        isLoading={loading}
+      />
     );
   }
 
   return (
-    <div className='min-h-[100dvh] flex flex-col' style={{ backgroundColor: THEME.colors.background }}>
-      <div className='px-6 py-4 border-b flex items-center justify-between' style={{ borderColor: THEME.colors.neutral }}>
-        <h1 className='text-xl font-bold'>{editId ? 'Edit Entry' : `Question ${currentQuestionIndex + 1} of ${QUESTIONS.length}`}</h1>
-        <button onClick={() => navigate('/app')} className='p-2'><X size={24} /></button>
+    <div
+      className='min-h-[100dvh] flex flex-col'
+      style={{ backgroundColor: THEME.colors.background }}
+    >
+      <div
+        className='px-6 py-4 border-b flex items-center justify-between'
+        style={{ borderColor: THEME.colors.neutral }}
+      >
+        <h1 className='text-xl font-bold'>
+          {editId
+            ? 'Edit Entry'
+            : `Question ${currentQuestionIndex + 1} of ${QUESTIONS.length}`}
+        </h1>
+        <button onClick={() => navigate('/app')} className='p-2'>
+          <X size={24} />
+        </button>
       </div>
-      <div className='flex-1 overflow-y-auto px-6 py-8'>
-        <h2 className='text-2xl mb-8 font-bold leading-tight'>{currentQuestion?.question}</h2>
-        <div className='space-y-4'>
-          {currentQuestion?.options.map((option) => (
-            <button
-              key={option}
-              onClick={() => handleAnswer(option)}
-              className='w-full py-5 px-5 rounded-2xl border-2 text-left flex items-center justify-between'
-              style={{
-                backgroundColor: isOptionSelected(option) ? THEME.colors.primaryLight : THEME.colors.white,
-                borderColor: isOptionSelected(option) ? THEME.colors.primary : THEME.colors.neutral,
-                color: THEME.colors.text,
-              }}
-            >
-              <span className='font-semibold'>{option}</span>
-              <ChevronRight size={20} className='opacity-30' />
-            </button>
-          ))}
-        </div>
-        {showCustomInput && (
-          <div className='mt-8'>
-            <input type='text' value={customAnswer} onChange={(e) => setCustomAnswer(e.target.value)} className='w-full py-4 px-5 rounded-2xl border-2 outline-none'
-              style={{ borderColor: THEME.colors.primary }} placeholder='Tell us more...' autoFocus />
-            <button onClick={handleCustomSubmit} className='w-full py-4 rounded-2xl font-bold mt-4 shadow-lg'
-              style={{ backgroundColor: THEME.colors.primary, color: THEME.colors.text }}>Done</button>
-          </div>
-        )}
-      </div>
+
+      {currentQuestion && (
+        <QuestionCard
+          questionIndex={currentQuestionIndex}
+          question={currentQuestion}
+          isOptionSelected={questionnaire.isOptionSelected}
+          onAnswer={(answer) => {
+            const complete = questionnaire.handleAnswer(answer);
+            handleQuestionAnswered(complete);
+          }}
+          customAnswer={questionnaire.customAnswer}
+          showCustomInput={questionnaire.showCustomInput}
+          onCustomAnswerChange={questionnaire.setCustomAnswer}
+          onCustomSubmit={() => {
+            const complete = questionnaire.handleCustomSubmit();
+            handleQuestionAnswered(complete);
+          }}
+        />
+      )}
     </div>
   );
 }
